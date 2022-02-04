@@ -1,14 +1,14 @@
 import random
-
+import  cornerFloodAlgorithm as flood
 import pgerom as pe
 pe.init()
 ss = (1920, 1080) # Screen size
-ss = (1000, 600)
-pe.display.make(ss, "Minesweeper touch", 0) # 2 for fullscreen
+#ss = (1000, 600)
+pe.display.make(ss, "Minesweeper touch", 2) # 2 for fullscreen
 pe.display_work = pe.display_a
 # Size Settings
 maxzoom = 4
-minzoom = 0.25
+minzoom = 0.4
 rect = (10, 10)
 
 surface = pe.pygame.Surface(rect)
@@ -145,6 +145,8 @@ gameJustBegun = True
 openings = []
 buttons = {}
 fingers = []
+filterClosed = None
+filterFlagged = None
 # Game functions
 def generateEmptyBoard(gridX, gridY, isMap=False):
     board = []
@@ -157,7 +159,7 @@ def generateEmptyBoard(gridX, gridY, isMap=False):
                 layer.append('empty')
         board.append(layer)
     return board
-def neighbouringSquares(center, gridX, gridY):
+def neighbouringSquares(center, gridX, gridY, filter=None, board=None):
     randomX = center[0]
     randomY = center[1]
     area = [
@@ -176,6 +178,8 @@ def neighbouringSquares(center, gridX, gridY):
             del area[i]
         elif area[i][1] < 0 or area[i][1] > gridY - 1:
             del area[i]
+        elif filter is not None and board is not None and board[area[i][1]][area[i][0]] != filter:
+            del area[i]
         else:
             i +=1
     return area
@@ -184,10 +188,12 @@ def uncover(startX, startY, gridX, gridY):
     visited = []
     unvisited = {(startX, startY)}
     sizeOfOpening = 30
+    uncovered = 0
     while unvisited:
         current = unvisited.pop()
         visited.append(current)
         openings.append([current, sizeOfOpening])
+        uncovered += 1
         sizeOfOpening += 1
         surround = 0
         empty = []
@@ -202,6 +208,7 @@ def uncover(startX, startY, gridX, gridY):
             unvisited.update(empty)
         else:
             boardMap[current[1]][current[0]] = str(surround)
+    return uncovered
 def generateBoard(gridX, gridY, bombMin, bombMax, startX, startY):
     global board, boardMap
     ok = False
@@ -286,6 +293,7 @@ def reloadData():
     res['startGameText'] = pe.text.make("New Game", "Resources/font.ttf", 20, (ss[0]/2, ss[1]/2+120), [ext['text'], None])
     res['startGameTextSelected'] = pe.text.make("New Game", "Resources/font.ttf", 20, (ss[0]/2, ss[1]/2+120), [ext['background'], None])
     res['beginGameText'] = pe.text.make("Tap to begin.", "Resources/font.ttf", 20, (ss[0]/2, ss[1]/2), [ext['background'], None])
+    res['font'] = pe.pygame.font.Font("Resources/font.ttf", 15)
 
 # Button functions
 def leftArrow():
@@ -560,7 +568,7 @@ while run:
         pe.display_a = surface
         # Inner display
 
-        pe.fill.full(ext['background'])
+        pe.fill.full(ext['color'])
         for y in range(len(board)):
             for x in range(len(board[y])):
                 if not pe.rect.rect(x * 30, y * 30, 30, 30).colliderect(visibleRect):
@@ -568,14 +576,36 @@ while run:
                 if board[y][x] == 'bomb' and game_state == 'pregameover':
                     pe.draw.rect(pe.color.red, (x * 30, y * 30, 30, 30), 0)
                 elif boardMap[y][x] == 'closed':
-                    pe.draw.rect(ext['color'], (x*30, y*30, 30, 30), 0)
+                    pe.draw.rect(ext['background'], (x*30, y*30, 30, 30), 0)
+                    drawRound(ext['color'], filterClosed[y][x], (x*30, y*30, 30, 30))
                 elif boardMap[y][x] == 'flagged':
-                    drawRound((97, 98, 80), [True]*4, (x * 30, y * 30, 30, 30))
+                    pe.draw.rect(ext['background'], (x * 30, y * 30, 30, 30), 0)
+                    drawRound((97, 98, 80), filterFlagged[y][x], (x * 30, y * 30, 30, 30))
                     pe.display.blit.rect(res['flagged'].object, (x*30+5, y*30+5))
-                elif boardMap[y][x] != 'opened':
+                elif boardMap[y][x] == 'opened':
+                    pe.draw.rect(ext['background'], (x * 30, y * 30, 30, 30), 0)
+                elif boardMap[y][x] != 'opened' and scalex > 0.7 and scaley > 0.7:
+                    pe.draw.rect(ext['background'], (x * 30, y * 30, 30, 30), 0)
                     centerOfText = pe.math.center((x*30, y*30, 30, 30))
-                    text = pe.text.make(boardMap[y][x], "Resources/font.ttf", 15, centerOfText, [ext['text'], None])
-                    pe.text.display(text)
+                    text = res['font'].render(boardMap[y][x], True, ext['text'])
+                    textRect = text.get_rect()
+                    textRect.center = centerOfText
+                    pe.display_a.blit(text, textRect)
+                    if scalex <= 1 and scaley <= 1:
+                        b = ext['background']
+                        pe.draw.rect((b[0], b[1], b[2], 255*scalex/2), (x * 30, y * 30, 30, 30), 0)
+                else:
+                    pe.draw.rect(ext['background'], (x * 30, y * 30, 30, 30), 0)
+                if boardMap[y][x] in 'opened12345678' and scalex > 0.7 and scaley > 0.7:
+                    c = ext['color']
+                    gamemodeGrid = presets['gamemodes'][ext['lastGameMode']]['grid']
+                    if boardMap[min(max(y-1, 0), gamemodeGrid[1])][min(max(x, 0), gamemodeGrid[0])] in 'opened12345678':
+                        pe.draw.line((c[0], c[1], c[2], 200), (x * 30 + 7.5, y * 30), (x * 30 + 22.5, y * 30), 1)
+                    if boardMap[min(max(y, 0), gamemodeGrid[1])][min(max(x-1, 0), gamemodeGrid[0])] in 'opened12345678':
+                        pe.draw.line((c[0], c[1], c[2], 200), (x * 30, y * 30 + 7.5), (x * 30, y * 30 + 22.5), 1)
+                    if scalex <= 1 and scaley <= 1:
+                        b = ext['background']
+                        pe.draw.rect((b[0], b[1], b[2], 255*scalex/2), (x * 30, y * 30, 30, 30), 0)
         i = 0
         while i < len(openings):
             sizeOfOpening = min(30, openings[i][1])
@@ -601,12 +631,19 @@ while run:
             if boardMap[gridY][gridX] == 'closed':
                 if tapMode == 'flag':
                     boardMap[gridY][gridX] = 'flagged'
+                    filterClosed = flood.filtered(boardMap, 'closed')
+                    filterFlagged = flood.filtered(boardMap, 'flagged')
                 elif board[gridY][gridX] == 'bomb':
                     game_state = 'pregameover'
                 else:
-                    uncover(gridX, gridY, *presets['gamemodes'][ext['lastGameMode']]['grid'])
+                    uncovered = uncover(gridX, gridY, *presets['gamemodes'][ext['lastGameMode']]['grid'])
+                    filterClosed = flood.filtered(boardMap, 'closed')
+                    filterFlagged = flood.filtered(boardMap, 'flagged')
             elif tapMode == 'flag' and boardMap[gridY][gridX] == 'flagged':
                 boardMap[gridY][gridX] = 'closed'
+                gamemode = presets['gamemodes'][ext['lastGameMode']]
+                filterClosed = flood.filtered(boardMap, 'closed')
+                filterFlagged = flood.filtered(boardMap, 'flagged')
         pressMove = False
 
         # End of inner display
@@ -615,10 +652,22 @@ while run:
         surface = pe.display_a
         pe.display_a = temp
         # Draw the inner display
-        cropped = pe.pygame.transform.scale(surface, (rect[0]*scalex, rect[1]*scaley))
+
+        tempSurface = pe.pygame.Surface((visibleRect[2], visibleRect[3]))
+
+        tempSurface.blit(surface, (0, 0), visibleRect)
+        cropped = pe.pygame.transform.scale(tempSurface, (visibleRect[2]*scalex, visibleRect[3]*scaley))
+
         #pe.draw.rect((255-ext['background'][0], 255-ext['background'][1], 255-ext['background'][2]), (posx - 1, posy - 1, rect[0]*scalex + 2, rect[1]*scaley + 2), 0)
-        pe.draw.rect(pe.color.red, (posx, posy, rect[0]*scalex, rect[1]*scaley), 20)
-        pe.display.blit.rect(cropped, (posx, posy, rect[0]*scalex, rect[1]*scaley))
+        if debug:
+            pe.draw.rect(pe.color.red, (posx, posy, rect[0]*scalex, rect[1]*scaley), 20)
+        pe.display.blit.rect(cropped, worldtoscreen(visibleRect[0], visibleRect[1]))
+        if debug:
+            cropped2 = pe.pygame.transform.scale(surface, ((rect[0] * scalex) / 10, (rect[1] * scaley) / 10))
+            pe.display.blit.rect(cropped2, (10, 10))
+            pe.draw.rect(pe.color.red, (10, 10, (rect[0]*scalex)/10, (rect[1]*scaley)/10), 2)
+            pe.draw.rect(pe.color.red, (10 + (visibleRect[0]*scalex)/10, 10 + (visibleRect[1]*scaley)/10, (visibleRect[2]*scalex)/10, (visibleRect[3]*scaley)/10), 2)
+
 
         # Tap mode select
         pe.draw.circle(ext['text'], (ss[0]/2 - 30, ss[1] - ss[1]/10), 31, 0)
@@ -664,8 +713,6 @@ while run:
         game_state = 'menu'
     elif game_state == 'menu':
         rect = (ss[0] - 70, 40, 30, 30)
-        if str(rect) in buttons:
-            del buttons[str(rect)]
         if themesMenu and not themesMenu2:
             themeMenu()
             pe.draw.circle(ext['text'], pe.math.center(rect), 32, 0)
@@ -722,8 +769,6 @@ while run:
         if pregame_animation > 0:
             pregame_animation -= 2
         if pe.mouse.clicked()[0]:
-            gameJustBegun = True
-            game_state = 'ingame'
             scale_animationEnable = True
             loc = screentoworld(*pe.mouse.pos())
             start_scalex = scalex
@@ -738,4 +783,10 @@ while run:
             gridX = int(loc[0] / 30)
             gridY = int(loc[1] / 30)
             generateBoard(*gamemode['grid'], *gamemode['bombs'], gridX, gridY)
+            filterClosed = flood.filtered(boardMap, 'closed')
+            filterFlagged = flood.filtered(boardMap, 'flagged')
+            gameJustBegun = True
+            game_state = 'ingame'
     pe.display.update()
+    if len(fingers) == 0:
+        buttons = {}
