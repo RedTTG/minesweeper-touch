@@ -143,13 +143,15 @@ scale_animationEnable = True
 tapMode = 'flag'
 gameJustBegun = True
 openings = []
+buttons = {}
+fingers = []
 # Game functions
-def generateEmptyBoard(gridX, gridY, map=False):
+def generateEmptyBoard(gridX, gridY, isMap=False):
     board = []
     for y in range(gridY):
         layer = []
         for x in range(gridX):
-            if map:
+            if isMap:
                 layer.append('closed')
             else:
                 layer.append('empty')
@@ -158,15 +160,15 @@ def generateEmptyBoard(gridX, gridY, map=False):
 def neighbouringSquares(center, gridX, gridY):
     randomX = center[0]
     randomY = center[1]
-    area = []
-    area.append((randomY + 1, randomX - 1))
-    area.append((randomY + 1, randomX))
-    area.append((randomY + 1, randomX + 1))
-    area.append((randomY, randomX - 1))
-    area.append((randomY, randomX + 1))
-    area.append((randomY - 1, randomX - 1))
-    area.append((randomY - 1, randomX))
-    area.append((randomY - 1, randomX + 1))
+    area = [
+        (randomY + 1, randomX - 1),
+        (randomY + 1, randomX),
+        (randomY + 1, randomX + 1),
+        (randomY, randomX - 1),
+        (randomY, randomX + 1),
+        (randomY - 1, randomX - 1),
+        (randomY - 1, randomX),
+        (randomY - 1, randomX + 1)]
     i = 0
     while i < len(area):
         area[i] = (area[i][1], area[i][0])
@@ -177,6 +179,29 @@ def neighbouringSquares(center, gridX, gridY):
         else:
             i +=1
     return area
+def uncover(startX, startY, gridX, gridY):
+    global boardMap, board, openings
+    visited = []
+    unvisited = {(startX, startY)}
+    sizeOfOpening = 30
+    while unvisited:
+        current = unvisited.pop()
+        visited.append(current)
+        openings.append([current, sizeOfOpening])
+        sizeOfOpening += 1
+        surround = 0
+        empty = []
+        for neighbour in neighbouringSquares(current, gridX, gridY):
+            if neighbour not in visited:
+                if board[neighbour[1]][neighbour[0]] == 'bomb':
+                    surround += 1
+                elif boardMap[neighbour[1]][neighbour[0]] == 'closed':
+                    empty.append(neighbour)
+        if surround == 0:
+            boardMap[current[1]][current[0]] = 'opened'
+            unvisited.update(empty)
+        else:
+            boardMap[current[1]][current[0]] = str(surround)
 def generateBoard(gridX, gridY, bombMin, bombMax, startX, startY):
     global board, boardMap
     ok = False
@@ -215,7 +240,7 @@ def generateBoard(gridX, gridY, bombMin, bombMax, startX, startY):
             board[randomY][randomX] = 'bomb'
             i += 1
         visited = []
-        unvisited = set([(startX, startY)])
+        unvisited = {(startX, startY)}
         while unvisited:
             current = unvisited.pop()
             visited.append(current)
@@ -226,27 +251,7 @@ def generateBoard(gridX, gridY, bombMin, bombMax, startX, startY):
         if len(visited)+bombs == gridX*gridY:
             ok = True
             # Generate map
-            visited = []
-            unvisited = set([(startX, startY)])
-            sizeOfOpening = 30
-            while unvisited:
-                current = unvisited.pop()
-                visited.append(current)
-                openings.append([current, sizeOfOpening])
-                sizeOfOpening += 1
-                surround = 0
-                empty = []
-                for neighbour in neighbouringSquares(current, gridX, gridY):
-                    if neighbour not in visited:
-                        if board[neighbour[1]][neighbour[0]] == 'bomb':
-                            surround += 1
-                        else:
-                            empty.append(neighbour)
-                if surround == 0:
-                    boardMap[current[1]][current[0]] = 'opened'
-                    unvisited.update(empty)
-                else:
-                    boardMap[current[1]][current[0]] = str(surround)
+            uncover(startX, startY, gridX, gridY)
     return board, boardMap
 
 def rawColoring(image:pe.image, color):
@@ -272,6 +277,8 @@ def reloadData():
     res['mineText'] = rawColoring(pe.image('Resources/mine.png',(30, 30)), ext['text'])
     res['flagColor'] = rawColoring(pe.image('Resources/flagged.png',(30, 30)), ext['color'])
     res['mineColor'] = rawColoring(pe.image('Resources/mine.png',(30, 30)), ext['color'])
+    res['themesText'] = rawColoring(pe.image('Resources/themes.png',(30, 30), (ss[0]-70, 40)), ext['text'])
+    res['themesBackground'] = rawColoring(pe.image('Resources/themes.png',(30, 30), (ss[0]-70, 40)), ext['background'])
     # Texts
     res['gamemodeText'] = []
     for gamemode in presets['gamemodes']:
@@ -306,6 +313,45 @@ def tapModeFlag():
     global tapMode
     tapMode = 'flag'
 
+# Custom functions
+
+class touchButton:
+    def image(rect, ic, ac, action=None):
+        global fingers, buttons
+        if not len(fingers) > 0:
+            ic.display()
+            return
+        fingerPosition = list((fingers[0]['pos'][0], fingers[0]['pos'][1]))
+        fingerRect = pe.rect.rect(fingerPosition[0]-10, fingerPosition[1]-10, 20, 20)
+        buttonRect = pe.rect.rect(*rect)
+        if fingerRect.colliderect(buttonRect) and action is not None:
+            ac.display()
+            if str(rect) not in buttons:
+                action()
+                buttons[str(rect)] = True
+        elif str(rect) in buttons:
+            del buttons[str(rect)]
+            ic.display()
+        else:
+            ic.display()
+    def rect(rect, ic, ac, action=None):
+        global fingers, buttons
+        if not len(fingers) > 0:
+            pe.draw.rect(ic, rect, 0)
+            return
+        fingerPosition = list((fingers[0]['pos'][0], fingers[0]['pos'][1]))
+        fingerRect = pe.rect.rect(fingerPosition[0]-10, fingerPosition[1]-10, 20, 20)
+        buttonRect = pe.rect.rect(*rect)
+        if fingerRect.colliderect(buttonRect) and action is not None:
+            pe.draw.rect(ac, rect, 0)
+            if str(rect) not in buttons:
+                action()
+                buttons[str(rect)] = True
+        elif str(rect) in buttons:
+            del buttons[str(rect)]
+            pe.draw.rect(ic, rect, 0)
+        else:
+            pe.draw.rect(ic, rect, 0)
 #
 
 def drawRound(color, sides, rect):
@@ -332,10 +378,56 @@ def drawRound(color, sides, rect):
 reloadData()
 lastpos = (posx, posy)
 lastfinger = (0,0)
+fingerRect = pe.rect.rect(-10,-10,10,10)
 pressMove = False
+noZoomBefore = True
 loc2 = (rect[0]+100, rect[1]+100)
+themesMenu = False
+themesMenu2 = False
+changeThemeIndex = 0
+def changeTheme():
+    global game_state
+    theme = presets['themes'][changeThemeIndex]
+    ext['background'] = theme['background']
+    ext['color'] = theme['color']
+    ext['text'] = theme['text']
+    pe.save('save.mst', ext)
+    reloadData()
+    game_state = 'menuInit'
+def toggleThemeMenu():
+    global themesMenu, themesMenu2
+    themesMenu = not themesMenu
+    themesMenu2 = True
+def themeMenu():
+    global changeThemeIndex
+    pe.draw.circle(ext['text'], pe.math.center((40, 40, 30, 30)), 32, 0)
+    pe.draw.circle(ext['background'], pe.math.center((40, 40, 30, 30)), 30, 0)
+    pe.draw.rect(ext['text'], (55, 23, ss[0]-110, 64), 0)
+    pe.draw.rect(ext['background'], (55, 25, ss[0]-110, 60), 0)
+    x, y = pe.math.center((40, 40, 30, 30))
+    i = 0
+    while i < len(presets['themes']):
+        if not (ext['color'] == presets['themes'][i]['color'] and ext['background'] == presets['themes'][i]['background']):
+            changeThemeIndex = i
+            touchButton.rect((x-18, y-18, 36, 36), ext['background'], presets['themes'][i]['background'], changeTheme)
+            pe.draw.circle(presets['themes'][i]['background'], (x, y), 18, 0)
+            pe.draw.circle(presets['themes'][i]['color'], (x, y) , 10, 0)
+        else:
+            pe.draw.circle(ext['text'], (x, y), 23, 0)
+            pe.draw.circle(ext['color'], (x, y), 22, 0)
+            pe.draw.circle(ext['background'], (x, y), 15, 0)
+        x += (ss[0]-110) / len(presets['themes'])
+        i += 1
 
-while True:
+
+#
+if __name__ == "__main__":
+    run = True
+else:
+    run = False
+#
+
+while run:
     # Handle zoom and pan
     for pe.event.c in pe.event.get():
         pe.event.quitcheckauto()
@@ -357,10 +449,10 @@ while True:
             while i < len(fingers):
                 if fingers[i]['id'] == pe.event.c.finger_id:
                     del fingers[i]
-                    i -= 1
+                    break
                 i += 1
     pe.fill.full(ext['background'])
-    if len(fingers) == 2 and not zooming:
+    if game_state == 'ingame' and len(fingers) == 2 and not zooming:
         distance = pe.math.dist(fingers[0]['pos'], fingers[1]['pos'])
         zoom_start_pos = pe.math.lerp(
             fingers[0]['pos'],
@@ -374,7 +466,7 @@ while True:
         zooming = True
         scale_animationEnable = False
         moving = False
-    elif len(fingers) == 2 and zooming:
+    elif game_state == 'ingame' and len(fingers) == 2 and zooming:
         distance_new = pe.math.dist(fingers[0]['pos'], fingers[1]['pos'])
         change = distance_new - distance
         change *= 0.02
@@ -394,13 +486,13 @@ while True:
         original = tuple(zoompoint)
         zoom_start_pos = screentoworld(*zoompoint)
         scale_animationEnable = False
-    elif len(fingers) == 1 and not moving and not zooming:
+    elif game_state == 'ingame' and len(fingers) == 1 and not moving and not zooming:
         distance = fingers[0]['pos']
         firstdistance = fingers[0]['pos']
         lastfinger = fingers[0]['pos']
         moving = True
         scale_animationEnable = False
-    elif len(fingers) == 1 and moving and not zooming:
+    elif game_state == 'ingame' and len(fingers) == 1 and moving and not zooming:
         lastfinger = fingers[0]['pos']
         posx += (fingers[0]['pos'][0] - distance[0])# * 1.5
         posy += (fingers[0]['pos'][1] - distance[1])# * 1.5
@@ -413,21 +505,25 @@ while True:
         distance = fingers[0]['pos']
         firstdistance = fingers[0]['pos']
         lastfinger = fingers[0]['pos']
-    elif moving:
+        noZoomBefore = False
+    elif moving and noZoomBefore:
         change = (lastfinger[0] - firstdistance[0]) + (lastfinger[1] - firstdistance[1])
         if abs(change) < 0.1:
             pressMove = True
         else:
             pressMove = False
         moving = False
+    elif moving:
+        pressMove = False
+        moving = False
     else:
         moving = False
         pressMove = False
         lastfinger = None
         gameJustBegun = False
-    #
-    temp = pe.display_a
-    if game_state == 'ingame':
+        noZoomBefore = True
+
+    if game_state == 'ingame' or game_state == 'pregameover':
         if scale_animationEnable and scale_animationX > scalex and scale_animationY > scaley:
             change = 0.02
             scalex = min(max(scalex * 1 + change, minzoom), maxzoom)
@@ -442,12 +538,33 @@ while True:
             loc = screentoworld(scale_animationPX, scale_animationPY)
         else:
             scale_animationEnable = False
+        screenRect = (
+            0, 0,
+            ss[0],
+            ss[1]
+        )
+        gameRect = (
+            posx, posy,
+            rect[0]*scalex + posx,
+            rect[1]*scaley + posy
+        )
+        visibleRect = (
+            max(screenRect[0],min(screenRect[2], gameRect[0])),
+            max(screenRect[1],min(screenRect[3], gameRect[1])),
+            max(screenRect[0],min(screenRect[2], gameRect[2])),
+            max(screenRect[1],min(screenRect[3], gameRect[3]))
+        )
+        visibleRect = (*screentoworld(visibleRect[0], visibleRect[1]), *screentoworld(visibleRect[2], visibleRect[3]))
+        visibleRect = pe.rect.rect(visibleRect[0],visibleRect[1],visibleRect[2] - visibleRect[0], visibleRect[3] - visibleRect[1])
+        temp = pe.display_a
         pe.display_a = surface
         # Inner display
 
         pe.fill.full(ext['background'])
         for y in range(len(board)):
             for x in range(len(board[y])):
+                if not pe.rect.rect(x * 30, y * 30, 30, 30).colliderect(visibleRect):
+                    continue
                 if board[y][x] == 'bomb' and game_state == 'pregameover':
                     pe.draw.rect(pe.color.red, (x * 30, y * 30, 30, 30), 0)
                 elif boardMap[y][x] == 'closed':
@@ -472,10 +589,12 @@ while True:
 
         if len(fingers) > 0:
             loc2 = screentoworld(*fingers[0]['pos'])
+            fingerPosition = fingers[0]['pos']
+            fingerRect = pe.rect.rect(fingerPosition[0] - 10, fingerPosition[1] - 10, 20, 20)
         elif not pressMove:
             loc2 = (rect[0]+100, rect[1]+100)
-        if ((not moving) or pressMove) and (not zooming) and loc2[0]<=rect[0] and loc2[1]<=rect[1]:
-            print('select')
+        uiRect = pe.rect.rect(ss[0]/2 - 60, ss[1] - ss[1]/10 - 31, 120, 62)
+        if (not fingerRect.colliderect(uiRect)) and ((not moving) or pressMove) and (not zooming) and loc2[0]<=rect[0] and loc2[1]<=rect[1]:
             lastpos = (posx, posy)
             gridX = int(loc2[0] / 30)
             gridY = int(loc2[1] / 30)
@@ -485,22 +604,22 @@ while True:
                 elif board[gridY][gridX] == 'bomb':
                     game_state = 'pregameover'
                 else:
-                    boardMap[gridY][gridX] = 'opened'
+                    uncover(gridX, gridY, *presets['gamemodes'][ext['lastGameMode']]['grid'])
             elif tapMode == 'flag' and boardMap[gridY][gridX] == 'flagged':
                 boardMap[gridY][gridX] = 'closed'
         pressMove = False
 
-        #
+        # End of inner display
         if debug:
             pe.draw.circle(pe.color.black, screentoworld(*pe.mouse.pos()), 10, 0)
         surface = pe.display_a
         pe.display_a = temp
         # Draw the inner display
-
         cropped = pe.pygame.transform.scale(surface, (rect[0]*scalex, rect[1]*scaley))
         #pe.draw.rect((255-ext['background'][0], 255-ext['background'][1], 255-ext['background'][2]), (posx - 1, posy - 1, rect[0]*scalex + 2, rect[1]*scaley + 2), 0)
         pe.draw.rect(pe.color.red, (posx, posy, rect[0]*scalex, rect[1]*scaley), 20)
         pe.display.blit.rect(cropped, (posx, posy, rect[0]*scalex, rect[1]*scaley))
+
         # Tap mode select
         pe.draw.circle(ext['text'], (ss[0]/2 - 30, ss[1] - ss[1]/10), 31, 0)
         pe.draw.circle(ext['text'], (ss[0]/2 + 30, ss[1] - ss[1]/10), 31, 0)
@@ -511,11 +630,11 @@ while True:
         if tapMode == 'bomb':
             pe.draw.circle(ext['color'], (ss[0] / 2 - 30, ss[1] - ss[1] / 10), 25, 0)
             res['mineBackground'].display()
-            pe.button.image((ss[0]/2 + 30 - 25, ss[1] - ss[1] / 10 - 25, 50, 50), res['flagText'], res['flagColor'], tapModeFlag)
+            touchButton.image((ss[0]/2 + 30 - 25, ss[1] - ss[1] / 10 - 25, 50, 50), res['flagText'], res['flagColor'], tapModeFlag)
         elif tapMode == 'flag':
             pe.draw.circle(ext['color'], (ss[0] / 2 + 30, ss[1] - ss[1] / 10), 25, 0)
             res['flagBackground'].display()
-            pe.button.image((ss[0]/2 - 30 - 25, ss[1] - ss[1] / 10 - 25, 50, 50), res['mineText'], res['mineColor'], tapModeBomb)
+            touchButton.image((ss[0]/2 - 30 - 25, ss[1] - ss[1] / 10 - 25, 50, 50), res['mineText'], res['mineColor'], tapModeBomb)
 
 
         # Debug draw and update
@@ -544,14 +663,29 @@ while True:
         res['mineColor'].position = (ss[0]/2 - 30 - 15, ss[1] - ss[1] / 10 - 15)
         game_state = 'menu'
     elif game_state == 'menu':
+        rect = (ss[0] - 70, 40, 30, 30)
+        if str(rect) in buttons:
+            del buttons[str(rect)]
+        if themesMenu and not themesMenu2:
+            themeMenu()
+            pe.draw.circle(ext['text'], pe.math.center(rect), 32, 0)
+            pe.draw.circle(ext['color'], pe.math.center(rect), 30, 0)
+            touchButton.image(rect, res['themesBackground'], res['themesText'], toggleThemeMenu)
+        elif len(fingers) == 0 and themesMenu2:
+            themesMenu2 = False
+        if (not themesMenu) and not themesMenu2:
+            pe.draw.circle(ext['color'], pe.math.center((ss[0] - 70, 40, 30, 30)), 30, 1)
+            touchButton.image(rect, res['themesText'], res['themesBackground'], toggleThemeMenu)
+        elif len(fingers) == 0 and themesMenu2:
+            themesMenu2 = False
         res['mine'].display()
         # Gamemode selector
-        pe.button.image(((ss[0]/2)-presets['buttonSpace']-40, (ss[1]/2)+40, 50, 50), res['arrowLeft'], res['arrowLeftSelected'], leftArrow)
-        pe.button.image(((ss[0]/2)+presets['buttonSpace']-10, (ss[1]/2)+40, 50, 50), res['arrowRight'], res['arrowRightSelected'], rightArrow)
+        touchButton.image(((ss[0]/2)-presets['buttonSpace']-40, (ss[1]/2)+40, 50, 50), res['arrowLeft'], res['arrowLeftSelected'], leftArrow)
+        touchButton.image(((ss[0]/2)+presets['buttonSpace']-10, (ss[1]/2)+40, 50, 50), res['arrowRight'], res['arrowRightSelected'], rightArrow)
         pe.text.display(res['gamemodeText'][ext['lastGameMode']])
 
         # New game button
-        pe.button.rect(((ss[0]/2)-presets['buttonSpace']-70, (ss[1]/2)+100, presets['buttonSpace']*2+100, 40), ext['background'], ext['background'], action=startNewGame)
+        touchButton.rect(((ss[0]/2)-presets['buttonSpace']-70, (ss[1]/2)+100, presets['buttonSpace']*2+100, 40), ext['background'], ext['background'], action=startNewGame)
         if pe.rect.rect(*pe.mouse.pos(), 1, 1).colliderect(pe.rect.rect((ss[0]/2)-presets['buttonSpace']-70, (ss[1]/2)+100, presets['buttonSpace']*2+100, 40)):
             pe.draw.circle(ext['color'], ((ss[0] / 2) - presets['buttonSpace'] - 30, (ss[1] / 2) + 120), 20, 0)
             pe.draw.circle(ext['color'], ((ss[0] / 2) + presets['buttonSpace'] + 30, (ss[1] / 2) + 120), 20, 0)
