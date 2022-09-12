@@ -488,6 +488,8 @@ while run:
                     del fingers[i]
                     break
                 i += 1
+        elif pe.event.key_DOWN(pe.pygame.K_ESCAPE):
+            game_state = "menuInit"
         else:
             i = 0
             while i < len(fingers):
@@ -495,11 +497,11 @@ while run:
                     del fingers[i]
                     break
                 i += 1
-        if pe.mouse.clicked()[0]:
-            fingers.append({
-                'id': "mouse",
-                'pos': pe.mouse.pos()
-            })
+        # if pe.mouse.clicked()[0]:
+        #     fingers.append({
+        #         'id': "mouse",
+        #         'pos': pe.mouse.pos()
+        #     })
 
 
     pe.fill.full(ext['background'])
