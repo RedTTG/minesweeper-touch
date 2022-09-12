@@ -3,7 +3,7 @@ import  cornerFloodAlgorithm as flood
 import pgerom as pe
 pe.init()
 ss = (1920, 1080) # Screen size
-#ss = (1000, 600)
+#ss = (1200, 600)
 pe.display.make(ss, "Minesweeper touch", 2) # 2 for fullscreen
 pe.display_work = pe.display_a
 # Size Settings
@@ -113,6 +113,21 @@ presets = {
             'grid': (18, 32),
             'bombs': (150, 150)
         },
+        # {
+        #     'name': 'Extremely Huge',
+        #     'grid': (100, 100),
+        #     'bombs': (1000, 5000)
+        # },
+        # {
+        #     'name': 'Extremely Horizontal',
+        #     'grid': (100, 3),
+        #     'bombs': (50, 150)
+        # },
+        # {
+        #     'name': 'Extremely Vertical',
+        #     'grid': (3, 100),
+        #     'bombs': (50, 150)
+        # },
     ],
     'buttonSpace':100,
     'buttonLineSize':2
@@ -147,6 +162,7 @@ buttons = {}
 fingers = []
 filterClosed = None
 filterFlagged = None
+animation = []
 # Game functions
 def generateEmptyBoard(gridX, gridY, isMap=False):
     board = []
@@ -193,6 +209,10 @@ def uncover(startX, startY, gridX, gridY):
         current = unvisited.pop()
         visited.append(current)
         openings.append([current, sizeOfOpening])
+        animation.append({
+            'type': 'opening',
+            'location': current
+        })
         uncovered += 1
         sizeOfOpening += 1
         surround = 0
@@ -286,12 +306,20 @@ def reloadData():
     res['mineColor'] = rawColoring(pe.image('Resources/mine.png',(30, 30)), ext['color'])
     res['themesText'] = rawColoring(pe.image('Resources/themes.png',(30, 30), (ss[0]-70, 40)), ext['text'])
     res['themesBackground'] = rawColoring(pe.image('Resources/themes.png',(30, 30), (ss[0]-70, 40)), ext['background'])
+    res['bombed'] = rawColoring(pe.image('Resources/mine.png', (20, 20)), ext['background'])
     # Texts
     res['gamemodeText'] = []
     for gamemode in presets['gamemodes']:
         res['gamemodeText'].append(pe.text.make(gamemode['name'], "Resources/font.ttf", 20, (ss[0]/2, ss[1]/2+65), [ext['text'], None]))
     res['startGameText'] = pe.text.make("New Game", "Resources/font.ttf", 20, (ss[0]/2, ss[1]/2+120), [ext['text'], None])
     res['startGameTextSelected'] = pe.text.make("New Game", "Resources/font.ttf", 20, (ss[0]/2, ss[1]/2+120), [ext['background'], None])
+    # Over edition
+    res['gamemodeTextOver'] = []
+    for gamemode in presets['gamemodes']:
+        res['gamemodeTextOver'].append(pe.text.make(gamemode['name'], "Resources/font.ttf", 20, (ss[0]-ss[0]/6, ss[1]/2+15), [ext['text'], None]))
+    res['startGameTextOver'] = pe.text.make("New Game", "Resources/font.ttf", 20, (ss[0]-ss[0]/6, ss[1]/2+120), [ext['text'], None])
+    res['startGameTextSelectedOver'] = pe.text.make("New Game", "Resources/font.ttf", 20, (ss[0]-ss[0]/6, ss[1]/2+120), [ext['background'], None])
+    #
     res['beginGameText'] = pe.text.make("Tap to begin.", "Resources/font.ttf", 20, (ss[0]/2, ss[1]/2), [ext['background'], None])
     res['font'] = pe.pygame.font.Font("Resources/font.ttf", 15)
 
@@ -385,6 +413,7 @@ def drawRound(color, sides, rect):
 # Initialize
 reloadData()
 lastpos = (posx, posy)
+lastSelect = (-1,-1)
 lastfinger = (0,0)
 fingerRect = pe.rect.rect(-10,-10,10,10)
 pressMove = False
@@ -459,8 +488,22 @@ while run:
                     del fingers[i]
                     break
                 i += 1
+        else:
+            i = 0
+            while i < len(fingers):
+                if fingers[i]['id'] == "mouse":
+                    del fingers[i]
+                    break
+                i += 1
+        if pe.mouse.clicked()[0]:
+            fingers.append({
+                'id': "mouse",
+                'pos': pe.mouse.pos()
+            })
+
+
     pe.fill.full(ext['background'])
-    if game_state == 'ingame' and len(fingers) == 2 and not zooming:
+    if 'game' in game_state and len(fingers) == 2 and not zooming:
         distance = pe.math.dist(fingers[0]['pos'], fingers[1]['pos'])
         zoom_start_pos = pe.math.lerp(
             fingers[0]['pos'],
@@ -474,7 +517,7 @@ while run:
         zooming = True
         scale_animationEnable = False
         moving = False
-    elif game_state == 'ingame' and len(fingers) == 2 and zooming:
+    elif 'game' in game_state and len(fingers) == 2 and zooming:
         distance_new = pe.math.dist(fingers[0]['pos'], fingers[1]['pos'])
         change = distance_new - distance
         change *= 0.02
@@ -494,13 +537,13 @@ while run:
         original = tuple(zoompoint)
         zoom_start_pos = screentoworld(*zoompoint)
         scale_animationEnable = False
-    elif game_state == 'ingame' and len(fingers) == 1 and not moving and not zooming:
+    elif 'game' in game_state and len(fingers) == 1 and not moving and not zooming:
         distance = fingers[0]['pos']
         firstdistance = fingers[0]['pos']
         lastfinger = fingers[0]['pos']
         moving = True
         scale_animationEnable = False
-    elif game_state == 'ingame' and len(fingers) == 1 and moving and not zooming:
+    elif 'game' in game_state and len(fingers) == 1 and moving and not zooming:
         lastfinger = fingers[0]['pos']
         posx += (fingers[0]['pos'][0] - distance[0])# * 1.5
         posy += (fingers[0]['pos'][1] - distance[1])# * 1.5
@@ -531,7 +574,7 @@ while run:
         gameJustBegun = False
         noZoomBefore = True
 
-    if game_state == 'ingame' or game_state == 'pregameover':
+    if game_state == 'ingame' or game_state == 'pregameover' or game_state == 'gameover':
         if scale_animationEnable and scale_animationX > scalex and scale_animationY > scaley:
             change = 0.02
             scalex = min(max(scalex * 1 + change, minzoom), maxzoom)
@@ -573,8 +616,13 @@ while run:
             for x in range(len(board[y])):
                 if not pe.rect.rect(x * 30, y * 30, 30, 30).colliderect(visibleRect):
                     continue
-                if board[y][x] == 'bomb' and game_state == 'pregameover':
-                    pe.draw.rect(pe.color.red, (x * 30, y * 30, 30, 30), 0)
+                if board[y][x] == 'bomb' and 'gameover' in game_state:
+                    pe.draw.rect(ext['background'], (x * 30, y * 30, 30, 30), 0)
+                    if (x, y) == lastSelect:
+                        drawRound(pe.color.red, filterClosed[y][x], (x * 30, y * 30, 30, 30))
+                    else:
+                        drawRound(ext['color'], filterClosed[y][x], (x * 30, y * 30, 30, 30))
+                    pe.display.blit.rect(res['bombed'].object, (x * 30 + 5, y * 30 + 5))
                 elif boardMap[y][x] == 'closed':
                     pe.draw.rect(ext['background'], (x*30, y*30, 30, 30), 0)
                     drawRound(ext['color'], filterClosed[y][x], (x*30, y*30, 30, 30))
@@ -610,7 +658,9 @@ while run:
         while i < len(openings):
             sizeOfOpening = min(30, openings[i][1])
             locationOfOpening = (openings[i][0][0]*30 + (30-sizeOfOpening)/2, openings[i][0][1]*30 + (30-sizeOfOpening)/2)
-            drawRound(ext['color'], [True]*4, (*locationOfOpening, *[sizeOfOpening]*2))
+            rectOpening = (*locationOfOpening, *[sizeOfOpening] * 2)
+            if pe.rect.rect(*rectOpening).colliderect(visibleRect):
+                drawRound(ext['color'], [True]*4, (*locationOfOpening, *[sizeOfOpening]*2))
             openings[i][1] -= 2
             if openings[i][1] <= 5:
                 del openings[i]
@@ -624,15 +674,20 @@ while run:
         elif not pressMove:
             loc2 = (rect[0]+100, rect[1]+100)
         uiRect = pe.rect.rect(ss[0]/2 - 60, ss[1] - ss[1]/10 - 31, 120, 62)
-        if (not fingerRect.colliderect(uiRect)) and ((not moving) or pressMove) and (not zooming) and loc2[0]<=rect[0] and loc2[1]<=rect[1]:
+        if 'gameover' not in game_state and (not fingerRect.colliderect(uiRect)) and ((not moving) or pressMove) and (not zooming) and loc2[0]<=rect[0] and loc2[1]<=rect[1]:
             lastpos = (posx, posy)
             gridX = int(loc2[0] / 30)
             gridY = int(loc2[1] / 30)
+            lastSelect = (gridX, gridY)
             if boardMap[gridY][gridX] == 'closed':
                 if tapMode == 'flag':
                     boardMap[gridY][gridX] = 'flagged'
                     filterClosed = flood.filtered(boardMap, 'closed')
                     filterFlagged = flood.filtered(boardMap, 'flagged')
+                    animation.append({
+                        'type':'flagged',
+                        'location':(gridX, gridY)
+                    })
                 elif board[gridY][gridX] == 'bomb':
                     game_state = 'pregameover'
                 else:
@@ -644,6 +699,10 @@ while run:
                 gamemode = presets['gamemodes'][ext['lastGameMode']]
                 filterClosed = flood.filtered(boardMap, 'closed')
                 filterFlagged = flood.filtered(boardMap, 'flagged')
+                animation.append({
+                    'type': 'closed',
+                    'location': (gridX, gridY)
+                })
         pressMove = False
 
         # End of inner display
@@ -670,20 +729,21 @@ while run:
 
 
         # Tap mode select
-        pe.draw.circle(ext['text'], (ss[0]/2 - 30, ss[1] - ss[1]/10), 31, 0)
-        pe.draw.circle(ext['text'], (ss[0]/2 + 30, ss[1] - ss[1]/10), 31, 0)
-        pe.draw.rect(ext['text'], (ss[0]/2 - 30, ss[1] - ss[1]/10 - 31, 60, 62), 0)
-        pe.draw.circle(ext['background'], (ss[0]/2 - 30, ss[1] - ss[1]/10), 30, 0)
-        pe.draw.circle(ext['background'], (ss[0]/2 + 30, ss[1] - ss[1]/10), 30, 0)
-        pe.draw.rect(ext['background'], (ss[0]/2 - 30, ss[1] - ss[1]/10 - 30, 60, 60), 0)
-        if tapMode == 'bomb':
-            pe.draw.circle(ext['color'], (ss[0] / 2 - 30, ss[1] - ss[1] / 10), 25, 0)
-            res['mineBackground'].display()
-            touchButton.image((ss[0]/2 + 30 - 25, ss[1] - ss[1] / 10 - 25, 50, 50), res['flagText'], res['flagColor'], tapModeFlag)
-        elif tapMode == 'flag':
-            pe.draw.circle(ext['color'], (ss[0] / 2 + 30, ss[1] - ss[1] / 10), 25, 0)
-            res['flagBackground'].display()
-            touchButton.image((ss[0]/2 - 30 - 25, ss[1] - ss[1] / 10 - 25, 50, 50), res['mineText'], res['mineColor'], tapModeBomb)
+        if 'gameover' not in game_state:
+            pe.draw.circle(ext['text'], (ss[0]/2 - 30, ss[1] - ss[1]/10), 31, 0)
+            pe.draw.circle(ext['text'], (ss[0]/2 + 30, ss[1] - ss[1]/10), 31, 0)
+            pe.draw.rect(ext['text'], (ss[0]/2 - 30, ss[1] - ss[1]/10 - 31, 60, 62), 0)
+            pe.draw.circle(ext['background'], (ss[0]/2 - 30, ss[1] - ss[1]/10), 30, 0)
+            pe.draw.circle(ext['background'], (ss[0]/2 + 30, ss[1] - ss[1]/10), 30, 0)
+            pe.draw.rect(ext['background'], (ss[0]/2 - 30, ss[1] - ss[1]/10 - 30, 60, 60), 0)
+            if tapMode == 'bomb':
+                pe.draw.circle(ext['color'], (ss[0] / 2 - 30, ss[1] - ss[1] / 10), 25, 0)
+                res['mineBackground'].display()
+                touchButton.image((ss[0]/2 + 30 - 25, ss[1] - ss[1] / 10 - 25, 50, 50), res['flagText'], res['flagColor'], tapModeFlag)
+            elif tapMode == 'flag':
+                pe.draw.circle(ext['color'], (ss[0] / 2 + 30, ss[1] - ss[1] / 10), 25, 0)
+                res['flagBackground'].display()
+                touchButton.image((ss[0]/2 - 30 - 25, ss[1] - ss[1] / 10 - 25, 50, 50), res['mineText'], res['mineColor'], tapModeBomb)
 
 
         # Debug draw and update
@@ -787,6 +847,46 @@ while run:
             filterFlagged = flood.filtered(boardMap, 'flagged')
             gameJustBegun = True
             game_state = 'ingame'
+    elif game_state == 'gameoverInit':
+        res['arrowLeft'].position = ((ss[0]-ss[0]/6)-presets['buttonSpace']-30, ss[1]/2)
+        res['arrowLeftSelected'].position = ((ss[0]-ss[0]/6)-presets['buttonSpace']-35, ss[1]/2)
+
+        res['arrowRight'].position = ((ss[0]-ss[0]/6)+presets['buttonSpace'], ss[1]/2)
+        res['arrowRightSelected'].position = ((ss[0]-ss[0]/6)+presets['buttonSpace']+5, ss[1]/2)
+        game_state = 'gameover'
+    if game_state == 'pregameover':
+        gamemode = ext['lastGameMode']
+        gamemode = presets['gamemodes'][gamemode]
+        rect = (30 * gamemode['grid'][0], 30 * gamemode['grid'][1])
+        scalex = ((ss[1] - 100) / rect[1])
+        scaley = scalex
+        posx = ss[0] / 2 - rect[0] * scalex / 2  # center X
+        posy = ss[1] / 2 - rect[1] * scaley / 2  # center Y
+        ok = False
+        if not ok:
+            game_state = 'gameoverInit'
+    elif game_state == 'gameover':
+        touchButton.image(((ss[0]-ss[0]/6)-presets['buttonSpace']-40, (ss[1]/2), 50, 50), res['arrowLeft'], res['arrowLeftSelected'], leftArrow)
+        touchButton.image(((ss[0]-ss[0]/6)+presets['buttonSpace']-10, (ss[1]/2), 50, 50), res['arrowRight'], res['arrowRightSelected'], rightArrow)
+        pe.text.display(res['gamemodeTextOver'][ext['lastGameMode']])
+
+        touchButton.rect(((ss[0]-ss[0]/6)-presets['buttonSpace']-70, (ss[1]/2)+100, presets['buttonSpace']*2+100, 40), ext['background'], ext['background'], action=startNewGame)
+        if pe.rect.rect(*pe.mouse.pos(), 1, 1).colliderect(pe.rect.rect((ss[0]-ss[0]/6)-presets['buttonSpace']-70, (ss[1]/2)+100, presets['buttonSpace']*2+100, 40)):
+            pe.draw.circle(ext['color'], ((ss[0]-ss[0]/6) - presets['buttonSpace'] - 30, (ss[1] / 2) + 120), 20, 0)
+            pe.draw.circle(ext['color'], ((ss[0]-ss[0]/6) + presets['buttonSpace'] + 30, (ss[1] / 2) + 120), 20, 0)
+            pe.draw.rect(ext['color'],((ss[0]-ss[0]/6)-presets['buttonSpace']-30, (ss[1]/2)+100, presets['buttonSpace']*2+60, 40), 0)
+            pe.text.display(res['startGameTextSelectedOver'])
+        else:
+            pe.draw.circle(ext['text'], ((ss[0]-ss[0]/6) - presets['buttonSpace'] - 30, (ss[1] / 2) + 120), 20, presets['buttonLineSize'])
+            pe.draw.circle(ext['text'], ((ss[0]-ss[0]/6) + presets['buttonSpace'] + 30, (ss[1] / 2) + 120), 20, presets['buttonLineSize'])
+            pe.draw.rect(ext['background'],((ss[0]-ss[0]/6)-presets['buttonSpace']-30, (ss[1]/2)+100, presets['buttonSpace']*2+60, 40), 0)
+            pe.draw.line(ext['text'], ((ss[0]-ss[0]/6)-presets['buttonSpace']-30, (ss[1]/2)+100),
+                         ((ss[0]-ss[0]/6)+presets['buttonSpace']+30, (ss[1]/2)+100), presets['buttonLineSize']
+            )
+            pe.draw.line(ext['text'], ((ss[0]-ss[0]/6)-presets['buttonSpace']-30, (ss[1]/2)+140-presets['buttonLineSize']),
+                         ((ss[0]-ss[0]/6)+presets['buttonSpace']+30, (ss[1]/2)+140-presets['buttonLineSize']), presets['buttonLineSize']
+            )
+            pe.text.display(res['startGameTextOver'])
     pe.display.update()
     if len(fingers) == 0:
         buttons = {}
