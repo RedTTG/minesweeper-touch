@@ -1,6 +1,7 @@
 import random
 import  cornerFloodAlgorithm as flood
 import pygameextra as pe
+<<<<<<< Updated upstream
 import pygameextra.rect
 import hexicapi.save as hx
 SAVE = hx.save
@@ -10,6 +11,14 @@ ss = (1920, 1080) # Screen size
 #ss = (1000, 600)
 pe.display.make(ss, "Minesweeper touch", 2) # 2 for fullscreen
 #pe.display_work = pe.display_a
+=======
+from hexicapi.save import save, load
+
+pe.init()
+#ss = (1920, 1080) # Screen size
+ss = (1200, 600)
+pe.display.make(ss, "Minesweeper touch", 0) # 2 for fullscreen
+>>>>>>> Stashed changes
 # Size Settings
 maxzoom = 4
 minzoom = 0.4
@@ -21,7 +30,11 @@ surface = pe.Surface(rect)
 debug = False # True to debug zoom and pan
 zoompoint = (0, 0)
 zoom_start_pos = (0, 0)
+<<<<<<< Updated upstream
 ss = pe.display.get_size()
+=======
+ss = pe.display.display_reference.size
+>>>>>>> Stashed changes
 scalex = 1
 scaley = 1
 posx = ss[0]/2 - rect[0]/2 # center X
@@ -125,7 +138,11 @@ presets = {
 
 # External data
 try:
+<<<<<<< Updated upstream
     ext = LOAD('save.mst')[0]
+=======
+    ext = load('save.mst')[0]
+>>>>>>> Stashed changes
 except:
     ext = {
         'background':presets['themes'][0]['background'],
@@ -290,12 +307,26 @@ def reloadData():
     res['mineColor'] = rawColoring(pe.Image('Resources/mine.png',(30, 30)), ext['color'])
     res['themesText'] = rawColoring(pe.Image('Resources/themes.png',(30, 30), (ss[0]-70, 40)), ext['text'])
     res['themesBackground'] = rawColoring(pe.Image('Resources/themes.png',(30, 30), (ss[0]-70, 40)), ext['background'])
+<<<<<<< Updated upstream
+=======
+    res['bombed'] = rawColoring(pe.Image('Resources/mine.png', (20, 20)), ext['background'])
+>>>>>>> Stashed changes
     # Texts
     res['gamemodeText'] = []
     for gamemode in presets['gamemodes']:
         res['gamemodeText'].append(pe.text.Text(gamemode['name'], "Resources/font.ttf", 20, (ss[0]/2, ss[1]/2+65), [ext['text'], None]))
     res['startGameText'] = pe.text.Text("New Game", "Resources/font.ttf", 20, (ss[0]/2, ss[1]/2+120), [ext['text'], None])
     res['startGameTextSelected'] = pe.text.Text("New Game", "Resources/font.ttf", 20, (ss[0]/2, ss[1]/2+120), [ext['background'], None])
+<<<<<<< Updated upstream
+=======
+    # Over edition
+    res['gamemodeTextOver'] = []
+    for gamemode in presets['gamemodes']:
+        res['gamemodeTextOver'].append(pe.text.Text(gamemode['name'], "Resources/font.ttf", 20, (ss[0]-ss[0]/6, ss[1]/2+15), [ext['text'], None]))
+    res['startGameTextOver'] = pe.text.Text("New Game", "Resources/font.ttf", 20, (ss[0]-ss[0]/6, ss[1]/2+120), [ext['text'], None])
+    res['startGameTextSelectedOver'] = pe.text.Text("New Game", "Resources/font.ttf", 20, (ss[0]-ss[0]/6, ss[1]/2+120), [ext['background'], None])
+    #
+>>>>>>> Stashed changes
     res['beginGameText'] = pe.text.Text("Tap to begin.", "Resources/font.ttf", 20, (ss[0]/2, ss[1]/2), [ext['background'], None])
     res['font'] = pe.pygame.font.Font("Resources/font.ttf", 15)
 
@@ -403,7 +434,11 @@ def changeTheme():
     ext['background'] = theme['background']
     ext['color'] = theme['color']
     ext['text'] = theme['text']
+<<<<<<< Updated upstream
     SAVE('save.mst', ext)
+=======
+    save('save.mst', ext)
+>>>>>>> Stashed changes
     reloadData()
     game_state = 'menuInit'
 def toggleThemeMenu():
@@ -577,8 +612,18 @@ while run:
             for x in range(len(board[y])):
                 if not pe.rect.Rect(x * 30, y * 30, 30, 30).colliderect(visibleRect):
                     continue
+<<<<<<< Updated upstream
                 if board[y][x] == 'bomb' and game_state == 'pregameover':
                     pe.draw.rect(pe.color.red, (x * 30, y * 30, 30, 30), 0)
+=======
+                if board[y][x] == 'bomb' and 'gameover' in game_state:
+                    pe.draw.rect(ext['background'], (x * 30, y * 30, 30, 30), 0)
+                    if (x, y) == lastSelect:
+                        drawRound(pe.colors.red, filterClosed[y][x], (x * 30, y * 30, 30, 30))
+                    else:
+                        drawRound(ext['color'], filterClosed[y][x], (x * 30, y * 30, 30, 30))
+                    pe.display.blit(res['bombed'].surface, (x * 30 + 5, y * 30 + 5))
+>>>>>>> Stashed changes
                 elif boardMap[y][x] == 'closed':
                     pe.draw.rect(ext['background'], (x*30, y*30, 30, 30), 0)
                     drawRound(ext['color'], filterClosed[y][x], (x*30, y*30, 30, 30))
@@ -594,7 +639,11 @@ while run:
                     text = res['font'].render(boardMap[y][x], True, ext['text'])
                     textRect = text.get_rect()
                     textRect.center = centerOfText
+<<<<<<< Updated upstream
                     pe.display.display_reference.stamp(text, textRect)
+=======
+                    pe.display.blit(text, textRect)
+>>>>>>> Stashed changes
                     if scalex <= 1 and scaley <= 1:
                         b = ext['background']
                         pe.draw.rect((b[0], b[1], b[2], 255*scalex/2), (x * 30, y * 30, 30, 30), 0)
@@ -614,7 +663,13 @@ while run:
         while i < len(openings):
             sizeOfOpening = min(30, openings[i][1])
             locationOfOpening = (openings[i][0][0]*30 + (30-sizeOfOpening)/2, openings[i][0][1]*30 + (30-sizeOfOpening)/2)
+<<<<<<< Updated upstream
             drawRound(ext['color'], [True]*4, (*locationOfOpening, *[sizeOfOpening]*2))
+=======
+            rectOpening = (*locationOfOpening, *[sizeOfOpening] * 2)
+            if pe.rect.Rect(*rectOpening).colliderect(visibleRect):
+                drawRound(ext['color'], [True]*4, (*locationOfOpening, *[sizeOfOpening]*2))
+>>>>>>> Stashed changes
             openings[i][1] -= 2
             if openings[i][1] <= 5:
                 del openings[i]
@@ -628,7 +683,11 @@ while run:
         elif not pressMove:
             loc2 = (rect[0]+100, rect[1]+100)
         uiRect = pe.rect.Rect(ss[0]/2 - 60, ss[1] - ss[1]/10 - 31, 120, 62)
+<<<<<<< Updated upstream
         if (not fingerRect.colliderect(uiRect)) and ((not moving) or pressMove) and (not zooming) and loc2[0]<=rect[0] and loc2[1]<=rect[1]:
+=======
+        if 'gameover' not in game_state and (not fingerRect.colliderect(uiRect)) and ((not moving) or pressMove) and (not zooming) and loc2[0]<=rect[0] and loc2[1]<=rect[1]:
+>>>>>>> Stashed changes
             lastpos = (posx, posy)
             gridX = int(loc2[0] / 30)
             gridY = int(loc2[1] / 30)
@@ -652,7 +711,11 @@ while run:
 
         # End of inner display
         if debug:
+<<<<<<< Updated upstream
             pe.draw.circle(pe.color.black, screentoworld(*pe.mouse.pos()), 10, 0)
+=======
+            pe.draw.circle(pe.colors.black, screentoworld(*pe.mouse.pos()), 10, 0)
+>>>>>>> Stashed changes
         surface = pe.display.display_reference
         pe.display.context(temp)
         # Draw the inner display
@@ -660,6 +723,7 @@ while run:
         tempSurface = pe.Surface((visibleRect[2], visibleRect[3]))
 
         tempSurface.stamp(surface, (0, 0), visibleRect)
+<<<<<<< Updated upstream
         cropped = pe.pygame.transform.scale(tempSurface.surface, (visibleRect[2]*scalex, visibleRect[3]*scaley))
 
         #pe.draw.rect((255-ext['background'][0], 255-ext['background'][1], 255-ext['background'][2]), (posx - 1, posy - 1, rect[0]*scalex + 2, rect[1]*scaley + 2), 0)
@@ -671,6 +735,19 @@ while run:
             pe.display.blit(cropped2, (10, 10))
             pe.draw.rect(pe.color.red, (10, 10, (rect[0]*scalex)/10, (rect[1]*scaley)/10), 2)
             pe.draw.rect(pe.color.red, (10 + (visibleRect[0]*scalex)/10, 10 + (visibleRect[1]*scaley)/10, (visibleRect[2]*scalex)/10, (visibleRect[3]*scaley)/10), 2)
+=======
+        tempSurface.resize((visibleRect[2]*scalex, visibleRect[3]*scaley))
+
+        #pe.draw.rect((255-ext['background'][0], 255-ext['background'][1], 255-ext['background'][2]), (posx - 1, posy - 1, rect[0]*scalex + 2, rect[1]*scaley + 2), 0)
+        if debug:
+            pe.draw.rect(pe.colors.red, (posx, posy, rect[0]*scalex, rect[1]*scaley), 20)
+        pe.display.blit(tempSurface, worldtoscreen(visibleRect[0], visibleRect[1]))
+        if debug:
+            cropped2 = pe.pygame.transform.scale(surface, ((rect[0] * scalex) / 10, (rect[1] * scaley) / 10))
+            pe.display.blit(cropped2, (10, 10))
+            pe.draw.rect(pe.colors.red, (10, 10, (rect[0]*scalex)/10, (rect[1]*scaley)/10), 2)
+            pe.draw.rect(pe.colors.red, (10 + (visibleRect[0]*scalex)/10, 10 + (visibleRect[1]*scaley)/10, (visibleRect[2]*scalex)/10, (visibleRect[3]*scaley)/10), 2)
+>>>>>>> Stashed changes
 
 
         # Tap mode select
@@ -692,28 +769,28 @@ while run:
 
         # Debug draw and update
         if debug:
-            pe.draw.circle(pe.color.white, worldtoscreen(*screentoworld(*pe.mouse.pos())), 5,2)
+            pe.draw.circle(pe.colors.white, worldtoscreen(*screentoworld(*pe.mouse.pos())), 5,2)
         if debug and zooming:
             try:
-                pe.draw.line(pe.color.blue, worldtoscreen(*zoom_start_pos), worldtoscreen(afterzoomx, zoom_start_pos[1]),1)
-                pe.draw.line(pe.color.blue, worldtoscreen(afterzoomx, zoom_start_pos[1]), worldtoscreen(afterzoomx, afterzoomy),1)
-                pe.draw.line(pe.color.red, worldtoscreen(*zoom_start_pos), worldtoscreen(afterzoomx, afterzoomy),1)
+                pe.draw.line(pe.colors.blue, worldtoscreen(*zoom_start_pos), worldtoscreen(afterzoomx, zoom_start_pos[1]),1)
+                pe.draw.line(pe.colors.blue, worldtoscreen(afterzoomx, zoom_start_pos[1]), worldtoscreen(afterzoomx, afterzoomy),1)
+                pe.draw.line(pe.colors.red, worldtoscreen(*zoom_start_pos), worldtoscreen(afterzoomx, afterzoomy),1)
             except:
                 print("waiting for values")
     elif game_state == 'menuInit':
-        res['mine'].position = ((ss[0]/2)-100, (ss[1]/2)-225)
-        res['arrowLeft'].position = ((ss[0]/2)-presets['buttonSpace']-30, (ss[1]/2)+50)
-        res['arrowLeftSelected'].position = ((ss[0]/2)-presets['buttonSpace']-35, (ss[1]/2)+50)
+        res['mine'].pos = ((ss[0]/2)-100, (ss[1]/2)-225)
+        res['arrowLeft'].pos = ((ss[0]/2)-presets['buttonSpace']-30, (ss[1]/2)+50)
+        res['arrowLeftSelected'].pos = ((ss[0]/2)-presets['buttonSpace']-35, (ss[1]/2)+50)
 
-        res['arrowRight'].position = ((ss[0]/2)+presets['buttonSpace'], (ss[1]/2)+50)
-        res['arrowRightSelected'].position = ((ss[0]/2)+presets['buttonSpace']+5, (ss[1]/2)+50)
+        res['arrowRight'].pos = ((ss[0]/2)+presets['buttonSpace'], (ss[1]/2)+50)
+        res['arrowRightSelected'].pos = ((ss[0]/2)+presets['buttonSpace']+5, (ss[1]/2)+50)
 
-        res['flagText'].position = (ss[0]/2 + 30 - 15, ss[1] - ss[1] / 10 - 15)
-        res['flagBackground'].position = (ss[0]/2 + 30 - 15, ss[1] - ss[1] / 10 - 15)
-        res['flagColor'].position = (ss[0]/2 + 30 - 15, ss[1] - ss[1] / 10 - 15)
-        res['mineText'].position = (ss[0]/2 - 30 - 15, ss[1] - ss[1] / 10 - 15)
-        res['mineBackground'].position = (ss[0]/2 - 30 - 15, ss[1] - ss[1] / 10 - 15)
-        res['mineColor'].position = (ss[0]/2 - 30 - 15, ss[1] - ss[1] / 10 - 15)
+        res['flagText'].pos = (ss[0]/2 + 30 - 15, ss[1] - ss[1] / 10 - 15)
+        res['flagBackground'].pos = (ss[0]/2 + 30 - 15, ss[1] - ss[1] / 10 - 15)
+        res['flagColor'].pos = (ss[0]/2 + 30 - 15, ss[1] - ss[1] / 10 - 15)
+        res['mineText'].pos = (ss[0]/2 - 30 - 15, ss[1] - ss[1] / 10 - 15)
+        res['mineBackground'].pos = (ss[0]/2 - 30 - 15, ss[1] - ss[1] / 10 - 15)
+        res['mineColor'].pos = (ss[0]/2 - 30 - 15, ss[1] - ss[1] / 10 - 15)
         game_state = 'menu'
     elif game_state == 'menu':
         rect = (ss[0] - 70, 40, 30, 30)
@@ -754,7 +831,11 @@ while run:
             )
             res['startGameText'].display()
     elif game_state == 'pregame':
+<<<<<<< Updated upstream
         SAVE('save.mst', ext)
+=======
+        save('save.mst', ext)
+>>>>>>> Stashed changes
         pe.draw.circle((ext['color'][0]-10, ext['color'][1]-10, ext['color'][2]-10), (ss[0]/2, ss[1]/2), pregame_animation+10, 0)
         pe.draw.circle(ext['color'], (ss[0]/2, ss[1]/2), pregame_animation, 0)
         if pregame_animation < pe.math.dist((posx, posy), (ss[0]/2, ss[1]/2)):
@@ -791,6 +872,49 @@ while run:
             filterFlagged = flood.filtered(boardMap, 'flagged')
             gameJustBegun = True
             game_state = 'ingame'
+<<<<<<< Updated upstream
+=======
+    elif game_state == 'gameoverInit':
+        res['arrowLeft'].pos = ((ss[0]-ss[0]/6)-presets['buttonSpace']-30, ss[1]/2)
+        res['arrowLeftSelected'].pos = ((ss[0]-ss[0]/6)-presets['buttonSpace']-35, ss[1]/2)
+
+        res['arrowRight'].pos = ((ss[0]-ss[0]/6)+presets['buttonSpace'], ss[1]/2)
+        res['arrowRightSelected'].pos = ((ss[0]-ss[0]/6)+presets['buttonSpace']+5, ss[1]/2)
+        game_state = 'gameover'
+    if game_state == 'pregameover':
+        gamemode = ext['lastGameMode']
+        gamemode = presets['gamemodes'][gamemode]
+        rect = (30 * gamemode['grid'][0], 30 * gamemode['grid'][1])
+        scalex = ((ss[1] - 100) / rect[1])
+        scaley = scalex
+        posx = ss[0] / 2 - rect[0] * scalex / 2  # center X
+        posy = ss[1] / 2 - rect[1] * scaley / 2  # center Y
+        ok = False
+        if not ok:
+            game_state = 'gameoverInit'
+    elif game_state == 'gameover':
+        touchButton.image(((ss[0]-ss[0]/6)-presets['buttonSpace']-40, (ss[1]/2), 50, 50), res['arrowLeft'], res['arrowLeftSelected'], leftArrow)
+        touchButton.image(((ss[0]-ss[0]/6)+presets['buttonSpace']-10, (ss[1]/2), 50, 50), res['arrowRight'], res['arrowRightSelected'], rightArrow)
+        res['gamemodeTextOver'][ext['lastGameMode']].display()
+
+        touchButton.rect(((ss[0]-ss[0]/6)-presets['buttonSpace']-70, (ss[1]/2)+100, presets['buttonSpace']*2+100, 40), ext['background'], ext['background'], action=startNewGame)
+        if pe.rect.Rect(*pe.mouse.pos(), 1, 1).colliderect(pe.rect.Rect((ss[0]-ss[0]/6)-presets['buttonSpace']-70, (ss[1]/2)+100, presets['buttonSpace']*2+100, 40)):
+            pe.draw.circle(ext['color'], ((ss[0]-ss[0]/6) - presets['buttonSpace'] - 30, (ss[1] / 2) + 120), 20, 0)
+            pe.draw.circle(ext['color'], ((ss[0]-ss[0]/6) + presets['buttonSpace'] + 30, (ss[1] / 2) + 120), 20, 0)
+            pe.draw.rect(ext['color'],((ss[0]-ss[0]/6)-presets['buttonSpace']-30, (ss[1]/2)+100, presets['buttonSpace']*2+60, 40), 0)
+            res['startGameTextSelectedOver'].display()
+        else:
+            pe.draw.circle(ext['text'], ((ss[0]-ss[0]/6) - presets['buttonSpace'] - 30, (ss[1] / 2) + 120), 20, presets['buttonLineSize'])
+            pe.draw.circle(ext['text'], ((ss[0]-ss[0]/6) + presets['buttonSpace'] + 30, (ss[1] / 2) + 120), 20, presets['buttonLineSize'])
+            pe.draw.rect(ext['background'],((ss[0]-ss[0]/6)-presets['buttonSpace']-30, (ss[1]/2)+100, presets['buttonSpace']*2+60, 40), 0)
+            pe.draw.line(ext['text'], ((ss[0]-ss[0]/6)-presets['buttonSpace']-30, (ss[1]/2)+100),
+                         ((ss[0]-ss[0]/6)+presets['buttonSpace']+30, (ss[1]/2)+100), presets['buttonLineSize']
+            )
+            pe.draw.line(ext['text'], ((ss[0]-ss[0]/6)-presets['buttonSpace']-30, (ss[1]/2)+140-presets['buttonLineSize']),
+                         ((ss[0]-ss[0]/6)+presets['buttonSpace']+30, (ss[1]/2)+140-presets['buttonLineSize']), presets['buttonLineSize']
+            )
+            res['startGameTextOver'].display()
+>>>>>>> Stashed changes
     pe.display.update()
     if len(fingers) == 0:
         buttons = {}
