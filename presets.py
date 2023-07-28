@@ -99,4 +99,4 @@ presets = {
 
 max_zoom = 4
 min_zoom = 0.4
-game_state = 'menuInit'
+game_state = 'menu'

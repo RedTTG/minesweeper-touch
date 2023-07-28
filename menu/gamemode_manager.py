@@ -1,6 +1,7 @@
 import pygameextra as pe
 
 from Data import Data
+from menu import touch_button
 
 
 class GamemodeManager:
@@ -12,17 +13,9 @@ class GamemodeManager:
         width = self.data.measurements['play_button_width']
         height = self.data.measurements['play_button_height']
         outline_width = self.data.measurements['outline_width_three_fourths']
-        separation = self.data.measurements['outline_width_double']
         fill_width = width - outline_width
         fill_height = height - outline_width
-        rect = self.get_rect(x_center, y_center, width, height)
-
-        gamemode_rect = rect.copy()
-
-        gamemode_rect.center = rect.midtop
-        gamemode_rect.y -= separation
-        rect.center = rect.midbottom
-        rect.y += separation
+        rect, gamemode_rect = self.get_rect(self.data.measurements, x_center, y_center, width, height)
 
         fill_rect = rect.copy()
         fill_rect.width = fill_width
@@ -70,23 +63,18 @@ class GamemodeManager:
                 fill_rect,
                 0
             )
-            if pe.mouse.clicked()[0]:
-                self.data.game_manager.start_game()
+        elif pe.mouse.clicked()[0]:
+            self.data.game_manager.start_game()
 
-        for gamemode_rect in gamemode_rects:
-            pe.draw.rect(
-                self.data.ext['color'],
-                gamemode_rect,
-                0
-            )
-            if not self.is_hovered(rect):
-                pe.draw.rect(
-                    self.data.ext['color'],
-                    gamemode_rect,
-                    0
-                )
+        touch_button.image(left_gamemode_rect, self.data.surfaces['arrowLeft'],
+                           self.data.surfaces['arrowLeftSelected'], self.leftArrow)
 
-        # if self.is_hovered(rect):
+        self.data.text['gamemodeText'][self.data.ext['lastGameMode']].display()
+
+        touch_button.image(right_gamemode_rect, self.data.surfaces['arrowRight'],
+                           self.data.surfaces['arrowRightSelected'], self.rightArrow)
+
+        return self.is_hovered(rect)
 
     def retheme(self):
         pass
@@ -97,10 +85,29 @@ class GamemodeManager:
         mouse_rect = pe.rect.Rect(*mouse_position, 1, 1)
         return mouse_rect.colliderect(rect)
 
-    def get_rect(self, x_center, y_center, width, height):
-        return pe.rect.Rect(
+    @staticmethod
+    def get_rect(measurements, x_center, y_center, width, height):
+        separation = measurements['outline_width_double']
+
+        rect = pe.rect.Rect(
             x_center - width * .5,
             y_center - height * .5,
             width,
             height
         )
+
+        gamemode_rect = rect.copy()
+
+        gamemode_rect.center = rect.midtop
+        gamemode_rect.y -= separation
+        rect.center = rect.midbottom
+        rect.y += separation
+        return rect, gamemode_rect
+
+    def leftArrow(self):
+        if self.data.ext['lastGameMode'] > 0:
+            self.data.ext['lastGameMode'] -= 1
+
+    def rightArrow(self):
+        if self.data.ext['lastGameMode'] < len(self.data.presets['gamemodes']) - 1:
+            self.data.ext['lastGameMode'] += 1

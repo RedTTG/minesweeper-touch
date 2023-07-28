@@ -776,7 +776,7 @@ while run:
                          )
             res['startGameText'].display()
     elif game_state == 'pregame':
-        save()
+        # save()
         pe.draw.circle((ext['color'][0] - 10, ext['color'][1] - 10, ext['color'][2] - 10), (ss[0] / 2, ss[1] / 2),
                        pregame_animation + 10, 0)
         pe.draw.circle(ext['color'], (ss[0] / 2, ss[1] / 2), pregame_animation, 0)
