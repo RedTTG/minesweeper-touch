@@ -1,6 +1,8 @@
 from Grid import Grid
 from time import time
-def filtered(grid:(Grid, list), filter, toCheck:list=[], recursionLimit=1000):
+
+
+def filtered(grid: (Grid, list), filter, toCheck: list = [], recursionLimit=1000):
     formatOfGrid = 'normal'
 
     if type(grid) is list:
@@ -52,7 +54,7 @@ def filtered(grid:(Grid, list), filter, toCheck:list=[], recursionLimit=1000):
             else:
                 sides2.append(False)
             result.setAt(*current, sides2)
-    result.replaceAll(None, [False]*4)
+    result.replaceAll(None, [False] * 4)
     if formatOfGrid == 'normal':
         return result
     else:

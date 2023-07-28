@@ -2,7 +2,10 @@ import random
 import cornerFloodAlgorithm as flood
 import pygameextra as pe
 from pygameextra.fpslogger import Logger
-from hexicapi.save import save, load
+
+from presets import presets
+from save_and_load import save, ext
+
 from pygameextra.debug import FreeMode, Debugger
 
 pe.init()
@@ -11,8 +14,8 @@ ss, mode = (1920, 1080), 2  # Screen size
 # ss, mode = (700, 700), 1
 pe.display.make(ss, "Minesweeper touch", mode)  # 2 for fullscreen
 # Size Settings
-maxzoom = 4
-minzoom = 0.4
+max_zoom = 4
+min_zoom = 0.4
 rect = (10, 10)
 
 surface = pe.Surface(rect)
@@ -45,116 +48,7 @@ def screentoworld(screenx, screeny):
 
 
 # Preset data
-presets = {
-    'themes': [
-        {
-            'background': (25, 25, 25),
-            'color': (152, 140, 98),
-            'text': (214, 214, 214)
-        },
-        {
-            'background': (51, 51, 51),
-            'color': (215, 127, 55),
-            'text': (233, 233, 233)
-        },
-        {
-            'background': (13, 22, 29),
-            'color': (65, 162, 205),
-            'text': (189, 208, 225)
-        },
-        {
-            'background': (249, 249, 249),
-            'color': (127, 171, 198),
-            'text': (123, 123, 123)
-        },
-        {
-            'background': (17, 17, 17),
-            'color': (53, 151, 52),
-            'text': (201, 213, 201)
-        },
-        {
-            'background': (255, 255, 255),
-            'color': (215, 153, 158),
-            'text': (121, 121, 121)
-        },
-        {
-            'background': (249, 249, 249),
-            'color': (184, 177, 158),
-            'text': (124, 124, 124)
-        },
-        {
-            'background': (27, 27, 27),
-            'color': (182, 52, 98),
-            'text': (199, 195, 148)
-        },
-        {
-            'background': (55, 60, 54),
-            'color': (175, 201, 156),
-            'text': (220, 220, 220)
-        },
-    ],
-    'gamemodes': [
-        {
-            'name': 'Beginner',
-            'grid': (12, 22),
-            'bombs': (12, 12)
-        },
-        {
-            'name': 'Easy',
-            'grid': (7, 10),
-            'bombs': (10, 10)
-        },
-        {
-            'name': 'Medium',
-            'grid': (12, 22),
-            'bombs': (40, 40)
-        },
-        {
-            'name': 'Hard',
-            'grid': (18, 32),
-            'bombs': (100, 100)
-        },
-        {
-            'name': 'Huge',
-            'grid': (27, 48),
-            'bombs': (220, 220)
-        },
-        {
-            'name': 'Extreme',
-            'grid': (18, 32),
-            'bombs': (150, 150)
-        },
-        {
-            'name': 'Extremely Huge',
-            'grid': (100, 100),
-            'bombs': (1000, 5000)
-        },
-        {
-            'name': 'Extremely Horizontal',
-            'grid': (100, 3),
-            'bombs': (50, 150)
-        },
-        {
-            'name': 'Extremely Vertical',
-            'grid': (3, 100),
-            'bombs': (50, 150)
-        },
-    ],
-    'buttonSpace': 100,
-    'buttonLineSize': 2
-}
-# Game details
 
-# External data
-try:
-    ext = load('save.mst')[0]
-except:
-    ext = {
-        'background': presets['themes'][0]['background'],
-        'color': presets['themes'][0]['color'],
-        'text': presets['themes'][0]['text'],
-        'lastGameMode': 0
-    }
 # Game data
 board = None
 boardMap = None
@@ -466,7 +360,7 @@ def changeTheme():
     ext['background'] = theme['background']
     ext['color'] = theme['color']
     ext['text'] = theme['text']
-    save('save.mst', ext)
+    save()
     reloadData()
     game_state = 'menuInit'
 
@@ -571,8 +465,8 @@ while run:
         distance_new = pe.math.dist(fingers[0]['pos'], fingers[1]['pos'])
         change = distance_new - distance
         change *= 0.02
-        scalex = min(max(start_scalex * 1 + change, minzoom), maxzoom)
-        scaley = min(max(start_scaley * 1 + change, minzoom), maxzoom)
+        scalex = min(max(start_scalex * 1 + change, min_zoom), max_zoom)
+        scaley = min(max(start_scaley * 1 + change, min_zoom), max_zoom)
         zoompoint = pe.math.lerp_legacy(
             fingers[0]['pos'],
             fingers[1]['pos'],
@@ -627,8 +521,8 @@ while run:
     if game_state == 'ingame' or game_state == 'pregameover' or game_state == 'gameover':
         if scale_animationEnable and scale_animationX > scalex and scale_animationY > scaley:
             change = 0.02
-            scalex = min(max(scalex * 1 + change, minzoom), maxzoom)
-            scaley = min(max(scaley * 1 + change, minzoom), maxzoom)
+            scalex = min(max(scalex * 1 + change, min_zoom), max_zoom)
+            scaley = min(max(scaley * 1 + change, min_zoom), max_zoom)
             afterzoomx, afterzoomy = screentoworld(scale_animationPX, scale_animationPY)
 
             dist = pe.math.dist(loc, (afterzoomx, afterzoomy))
@@ -882,7 +776,7 @@ while run:
                          )
             res['startGameText'].display()
     elif game_state == 'pregame':
-        save('save.mst', ext)
+        save()
         pe.draw.circle((ext['color'][0] - 10, ext['color'][1] - 10, ext['color'][2] - 10), (ss[0] / 2, ss[1] / 2),
                        pregame_animation + 10, 0)
         pe.draw.circle(ext['color'], (ss[0] / 2, ss[1] / 2), pregame_animation, 0)
