@@ -252,20 +252,20 @@ def reloadData():
 
 # Button functions
 def leftArrow():
-    if ext['lastGameMode'] > 0:
-        ext['lastGameMode'] -= 1
+    if ext['gamemode'] > 0:
+        ext['gamemode'] -= 1
 
 
 def rightArrow():
-    if ext['lastGameMode'] < len(presets['gamemodes']) - 1:
-        ext['lastGameMode'] += 1
+    if ext['gamemode'] < len(presets['gamemodes']) - 1:
+        ext['gamemode'] += 1
 
 
 def startNewGame():
     global game_state, pregame_animation, rect, surface, posx, posy, scalex, scaley
     game_state = 'pregame'
     pregame_animation = 0
-    gamemode = ext['lastGameMode']
+    gamemode = ext['gamemode']
     gamemode = presets['gamemodes'][gamemode]
     rect = (30 * gamemode['grid'][0], 30 * gamemode['grid'][1])
     scalex = ((ss[1] - 100) / rect[1])
@@ -592,7 +592,7 @@ while run:
                     pe.draw.rect(ext['background'], (x * 30, y * 30, 30, 30), 0)
                 if boardMap[y][x] in 'opened12345678' and scalex > 0.7 and scaley > 0.7:
                     c = ext['color']
-                    gamemodeGrid = presets['gamemodes'][ext['lastGameMode']]['grid']
+                    gamemodeGrid = presets['gamemodes'][ext['gamemode']]['grid']
                     if boardMap[min(max(y - 1, 0), gamemodeGrid[1])][
                         min(max(x, 0), gamemodeGrid[0])] in 'opened12345678':
                         pe.draw.line((c[0], c[1], c[2], 200), (x * 30 + 7.5, y * 30), (x * 30 + 22.5, y * 30), 1)
@@ -641,12 +641,12 @@ while run:
                 elif board[gridY][gridX] == 'bomb':
                     game_state = 'pregameover'
                 else:
-                    uncovered = uncover(gridX, gridY, *presets['gamemodes'][ext['lastGameMode']]['grid'])
+                    uncovered = uncover(gridX, gridY, *presets['gamemodes'][ext['gamemode']]['grid'])
                     filterClosed = flood.filtered(boardMap, 'closed')
                     filterFlagged = flood.filtered(boardMap, 'flagged')
             elif tapMode == 'flag' and boardMap[gridY][gridX] == 'flagged':
                 boardMap[gridY][gridX] = 'closed'
-                gamemode = presets['gamemodes'][ext['lastGameMode']]
+                gamemode = presets['gamemodes'][ext['gamemode']]
                 filterClosed = flood.filtered(boardMap, 'closed')
                 filterFlagged = flood.filtered(boardMap, 'flagged')
                 animation.append({
@@ -745,7 +745,7 @@ while run:
                           res['arrowLeftSelected'], leftArrow)
         touchButton.image(((ss[0] / 2) + presets['buttonSpace'] - 10, (ss[1] / 2) + 40, 50, 50), res['arrowRight'],
                           res['arrowRightSelected'], rightArrow)
-        res['gamemodeText'][ext['lastGameMode']].display()
+        res['gamemodeText'][ext['gamemode']].display()
 
         # New game button
         touchButton.rect(
@@ -804,7 +804,7 @@ while run:
             scale_animationPY = pe.mouse.pos()[1]
             scale_animationX = 2
             scale_animationY = 2
-            gamemode = ext['lastGameMode']
+            gamemode = ext['gamemode']
             gamemode = presets['gamemodes'][gamemode]
             rect = (30 * gamemode['grid'][0], 30 * gamemode['grid'][1])
             gridX = int(loc[0] / 30)
@@ -822,7 +822,7 @@ while run:
         res['arrowRightSelected'].pos = ((ss[0] - ss[0] / 6) + presets['buttonSpace'] + 5, ss[1] / 2)
         game_state = 'gameover'
     if game_state == 'pregameover':
-        gamemode = ext['lastGameMode']
+        gamemode = ext['gamemode']
         gamemode = presets['gamemodes'][gamemode]
         rect = (30 * gamemode['grid'][0], 30 * gamemode['grid'][1])
         scalex = ((ss[1] - 100) / rect[1])
@@ -837,7 +837,7 @@ while run:
                           res['arrowLeftSelected'], leftArrow)
         touchButton.image(((ss[0] - ss[0] / 6) + presets['buttonSpace'] - 10, (ss[1] / 2), 50, 50), res['arrowRight'],
                           res['arrowRightSelected'], rightArrow)
-        res['gamemodeTextOver'][ext['lastGameMode']].display()
+        res['gamemodeTextOver'][ext['gamemode']].display()
 
         touchButton.rect(((ss[0] - ss[0] / 6) - presets['buttonSpace'] - 70, (ss[1] / 2) + 100,
                           presets['buttonSpace'] * 2 + 100, 40), ext['background'], ext['background'],

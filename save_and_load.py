@@ -16,6 +16,6 @@ try:
 except FileNotFoundError:
     ext = {
         **presets['themes'][0],
-        'lastGameMode': 0
+        'gamemode': 0
     }
     save()

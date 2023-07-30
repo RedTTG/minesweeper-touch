@@ -44,6 +44,45 @@ def make_measurements():
     return pre_final_measurements
 
 
+def make_rects(measurements):
+        width = measurements['play_button_width']
+        height = measurements['play_button_height']
+        start_game_rect, gamemodes_rect, left_gamemode_rect, right_gamemode_rect  = GamemodeManager.get_rect(
+            measurements,
+            measurements['x_center'],
+            measurements['play_button_main'],
+            width, height)
+        start_game_over_rect, gamemodes_over_rect, left_gamemode_over_rect, right_gamemode_over_rect = GamemodeManager.get_rect(
+            measurements,
+            measurements['play_button_resume'],
+            measurements['y_center'],
+            width, height)
+
+        rects = {
+            'start_game': {
+                'rect': start_game_rect,
+            },
+            'start_game_over': {
+                'rect': start_game_over_rect,
+            },
+            'gamemode': {
+                'rect': gamemodes_rect,
+                'left': left_gamemode_rect,
+                'right': right_gamemode_rect,
+            },
+            'gamemode_over': {
+                'rect': gamemodes_over_rect,
+                'left': left_gamemode_over_rect,
+                'right': right_gamemode_over_rect,
+            },
+            'title_mine': {
+                'rect': pe.rect.Rect(0, 0, start_game_rect.width * .8, start_game_rect.width * .8),
+            }
+        }
+        rects['title_mine']['rect'].center = (measurements['x_center'], measurements['y_center_three_fourths'])
+        return rects
+
+
 def rawColoring(image: pe.Image, color):
     surface = image.surface
     surfaceSize = surface.size
@@ -55,61 +94,17 @@ def rawColoring(image: pe.Image, color):
     return image
 
 
-def get_start_game_rects(measurements):
-    width = measurements['play_button_width']
-    height = measurements['play_button_height']
-    return (*GamemodeManager.get_rect(
-        measurements,
-        measurements['x_center'],
-        measurements['play_button_main'],
-        width, height), *GamemodeManager.get_rect(
-        measurements,
-        measurements['x_center'],
-        measurements['play_button_resume'],
-        width, height))
-
-
-def make_assets(ext, measurements, presets, resource_folder):
+def make_assets(ext, measurements, rects, presets, resource_folder):
     block_size = [measurements['block_size']] * 2
     font = os.path.join(resource_folder, 'font.ttf')
-    start_game_rect, gamemodes_rect, start_game_over_rect, gamemodes_over_rect = get_start_game_rects(measurements)
-    height = gamemodes_rect.height
-    left_gamemode_rect = pe.rect.Rect(0, 0, *block_size)
-    right_gamemode_rect = left_gamemode_rect.copy()
-    left_gamemode_over_rect = left_gamemode_rect.copy()
-    right_gamemode_over_rect = right_gamemode_rect.copy()
-    left_gamemode_rect.center = gamemodes_rect.midleft
-    right_gamemode_rect.center = gamemodes_rect.midright
-    left_gamemode_over_rect.center = gamemodes_over_rect.midleft
-    right_gamemode_over_rect.center = gamemodes_over_rect.midright
-    left_gamemode_rect.x += measurements['outline_width_double']
-    left_gamemode_over_rect.x += measurements['outline_width_double']
-    right_gamemode_rect.x -= measurements['outline_width_double']
-    right_gamemode_over_rect.x -= measurements['outline_width_double']
-    title_mine_rect = pe.rect.Rect(0, 0, start_game_rect.width * .8, start_game_rect.width * .8)
-    title_mine_rect.center = (measurements['x_center'], measurements['y_center_three_fourths'])
+
+
 
     surfaces = {
-        'mine': rawColoring(pe.Image(
+        'title_mine': rawColoring(pe.Image(
             os.path.join(resource_folder, 'mine.png'),
-            title_mine_rect.size, title_mine_rect.topleft
+            rects['title_mine']['rect'].size, rects['title_mine']['rect'].topleft
         ), ext['color']),
-        'arrowLeft': rawColoring(pe.Image(
-            os.path.join(resource_folder, 'arrowLeft.png'),
-            block_size, left_gamemode_rect.topleft
-        ), ext['text']),
-        'arrowRight': rawColoring(pe.Image(
-            os.path.join(resource_folder, 'arrowRight.png'),
-            block_size, right_gamemode_rect.topleft
-        ), ext['text']),
-        'arrowLeftSelected': rawColoring(pe.Image(
-            os.path.join(resource_folder, 'arrowLeftSelected.png'),
-            block_size, left_gamemode_rect.topleft
-        ), ext['text']),
-        'arrowRightSelected': rawColoring(pe.Image(
-            os.path.join(resource_folder, 'arrowRightSelected.png'),
-            block_size, right_gamemode_rect.topleft
-        ), ext['text']),
         'flagged': rawColoring(pe.Image(
             os.path.join(resource_folder, 'flagged.png'),
             (20, 20)
@@ -151,19 +146,28 @@ def make_assets(ext, measurements, presets, resource_folder):
             (20, 20)
         ), ext['background'])
     }
+
+    for side in ['left', 'right']:
+        for selected in ['', '_selected']:
+            for over in ['', '_over']:
+                surfaces[f'{side}_gamemode{selected}{over}'] = rawColoring(pe.Image(
+                    os.path.join(resource_folder, f'{side}_gamemode{selected}.png'),
+                    rects[f'gamemode{over}'][side].size, rects[f'gamemode{over}'][side].topleft
+                ), ext['text'])
+
     text = {
-        'startGameText': pe.text.Text(START_GAME_TEXT, font, 20, start_game_rect.center, [ext['text'], None]),
-        'startGameTextSelected': pe.text.Text(START_GAME_TEXT, font, 20, start_game_rect.center,
-                                              [ext['background'], None]),
-        'startGameTextOver': pe.text.Text(START_GAME_TEXT, font, 20, start_game_over_rect.center,
-                                          [ext['text'], None]),
-        'startGameTextSelectedOver': pe.text.Text(START_GAME_TEXT, font, 20, start_game_over_rect.center,
-                                                  [ext['background'], None]),
         'beginGameText': pe.text.Text("Tap to begin.", font, 20, (measurements['x_center'], measurements['y_center']),
                                       [ext['background'], None]),
-        'gamemodeText': [
-            pe.text.Text(gamemode['name'], font, 20, gamemodes_rect.center, [ext['text'], None]) for gamemode in
+    }
+    for selected in ['', '_selected']:
+        for over in ['', '_over']:
+            text[f'start_game{selected}{over}'] = pe.text.Text(START_GAME_TEXT, font, 20,
+                                                               rects[f'start_game{over}']['rect'].center,
+                                                               [ext['background'] if selected else ext['text'], None])
+    for over in ['', '_over']:
+        text[f'gamemode{over}'] = [
+            pe.text.Text(gamemode['name'], font, 20, rects[f'gamemode{over}']['rect'].center, [ext['text'], None]) for gamemode
+            in
             presets['gamemodes']
         ]
-    }
     return surfaces, text

@@ -8,17 +8,13 @@ class MenuManager:
         self.theme_manager = ThemeManager(data)
         self.gamemode_manager = GamemodeManager(data)
 
-    def main_menu(self):
+    def main(self):
         # self.theme_manager.render()
-        self.data.surfaces['mine'].display()
-        is_gamemode_hovered = self.gamemode_manager.render(
-            self.data.measurements['x_center'],
-            self.data.measurements['play_button_main'],
-        )
-        if is_gamemode_hovered:
-            self.data.text['startGameTextSelected'].display()
-        else:
-            self.data.text['startGameText'].display()
+        self.data.surfaces['title_mine'].display()
+        self.gamemode_manager.render()
+
+    def over(self):
+        self.gamemode_manager.render('_over')
 
     def retheme(self):  # TODO: add re-theming
         self.theme_manager.retheme()
