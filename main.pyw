@@ -463,7 +463,7 @@ else:
 while run:
     # Handle zoom and pan
     for pe.event.c in pe.event.get():
-        pe.event.quitcheckauto()
+        pe.event.quitCheckAuto()
         size = pe.display.get_size()
         if pe.event.c.type == pe.pygame.FINGERDOWN:
             fingers.append({
