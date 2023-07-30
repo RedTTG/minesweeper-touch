@@ -606,7 +606,7 @@ while run:
         while i < len(openings):
             sizeOfOpening = min(30, openings[i][1])
             locationOfOpening = (
-            openings[i][0][0] * 30 + (30 - sizeOfOpening) / 2, openings[i][0][1] * 30 + (30 - sizeOfOpening) / 2)
+                openings[i][0][0] * 30 + (30 - sizeOfOpening) / 2, openings[i][0][1] * 30 + (30 - sizeOfOpening) / 2)
             rectOpening = (*locationOfOpening, *[sizeOfOpening] * 2)
             if pe.rect.Rect(*rectOpening).colliderect(visibleRect):
                 drawRound(ext['color'], [True] * 4, (*locationOfOpening, *[sizeOfOpening] * 2))
@@ -624,7 +624,7 @@ while run:
             loc2 = (rect[0] + 100, rect[1] + 100)
         uiRect = pe.rect.Rect(ss[0] / 2 - 60, ss[1] - ss[1] / 10 - 31, 120, 62)
         if 'gameover' not in game_state and (not fingerRect.colliderect(uiRect)) and ((not moving) or pressMove) and (
-        not zooming) and loc2[0] <= rect[0] and loc2[1] <= rect[1]:
+                not zooming) and loc2[0] <= rect[0] and loc2[1] <= rect[1]:
             lastpos = (posx, posy)
             gridX = int(loc2[0] / 30)
             gridY = int(loc2[1] / 30)
@@ -676,8 +676,9 @@ while run:
             pe.display.blit(cropped2, (10, 10))
             pe.draw.rect(pe.colors.red, (10, 10, (rect[0] * scalex) / 10, (rect[1] * scaley) / 10), 2)
             pe.draw.rect(pe.colors.red, (
-            10 + (visibleRect[0] * scalex) / 10, 10 + (visibleRect[1] * scaley) / 10, (visibleRect[2] * scalex) / 10,
-            (visibleRect[3] * scaley) / 10), 2)
+                10 + (visibleRect[0] * scalex) / 10, 10 + (visibleRect[1] * scaley) / 10,
+                (visibleRect[2] * scalex) / 10,
+                (visibleRect[3] * scaley) / 10), 2)
 
         # Tap mode select
         if 'gameover' not in game_state:
@@ -757,7 +758,7 @@ while run:
             pe.draw.circle(ext['color'], ((ss[0] / 2) - presets['buttonSpace'] - 30, (ss[1] / 2) + 120), 20, 0)
             pe.draw.circle(ext['color'], ((ss[0] / 2) + presets['buttonSpace'] + 30, (ss[1] / 2) + 120), 20, 0)
             pe.draw.rect(ext['color'], (
-            (ss[0] / 2) - presets['buttonSpace'] - 30, (ss[1] / 2) + 100, presets['buttonSpace'] * 2 + 60, 40), 0)
+                (ss[0] / 2) - presets['buttonSpace'] - 30, (ss[1] / 2) + 100, presets['buttonSpace'] * 2 + 60, 40), 0)
             res['startGameTextSelected'].display()
         else:
             pe.draw.circle(ext['text'], ((ss[0] / 2) - presets['buttonSpace'] - 30, (ss[1] / 2) + 120), 20,
@@ -765,7 +766,7 @@ while run:
             pe.draw.circle(ext['text'], ((ss[0] / 2) + presets['buttonSpace'] + 30, (ss[1] / 2) + 120), 20,
                            presets['buttonLineSize'])
             pe.draw.rect(ext['background'], (
-            (ss[0] / 2) - presets['buttonSpace'] - 30, (ss[1] / 2) + 100, presets['buttonSpace'] * 2 + 60, 40), 0)
+                (ss[0] / 2) - presets['buttonSpace'] - 30, (ss[1] / 2) + 100, presets['buttonSpace'] * 2 + 60, 40), 0)
             pe.draw.line(ext['text'], ((ss[0] / 2) - presets['buttonSpace'] - 30, (ss[1] / 2) + 100),
                          ((ss[0] / 2) + presets['buttonSpace'] + 30, (ss[1] / 2) + 100), presets['buttonLineSize']
                          )
@@ -848,7 +849,8 @@ while run:
             pe.draw.circle(ext['color'], ((ss[0] - ss[0] / 6) - presets['buttonSpace'] - 30, (ss[1] / 2) + 120), 20, 0)
             pe.draw.circle(ext['color'], ((ss[0] - ss[0] / 6) + presets['buttonSpace'] + 30, (ss[1] / 2) + 120), 20, 0)
             pe.draw.rect(ext['color'], (
-            (ss[0] - ss[0] / 6) - presets['buttonSpace'] - 30, (ss[1] / 2) + 100, presets['buttonSpace'] * 2 + 60, 40),
+                (ss[0] - ss[0] / 6) - presets['buttonSpace'] - 30, (ss[1] / 2) + 100, presets['buttonSpace'] * 2 + 60,
+                40),
                          0)
             res['startGameTextSelectedOver'].display()
         else:
@@ -857,14 +859,15 @@ while run:
             pe.draw.circle(ext['text'], ((ss[0] - ss[0] / 6) + presets['buttonSpace'] + 30, (ss[1] / 2) + 120), 20,
                            presets['buttonLineSize'])
             pe.draw.rect(ext['background'], (
-            (ss[0] - ss[0] / 6) - presets['buttonSpace'] - 30, (ss[1] / 2) + 100, presets['buttonSpace'] * 2 + 60, 40),
+                (ss[0] - ss[0] / 6) - presets['buttonSpace'] - 30, (ss[1] / 2) + 100, presets['buttonSpace'] * 2 + 60,
+                40),
                          0)
             pe.draw.line(ext['text'], ((ss[0] - ss[0] / 6) - presets['buttonSpace'] - 30, (ss[1] / 2) + 100),
                          ((ss[0] - ss[0] / 6) + presets['buttonSpace'] + 30, (ss[1] / 2) + 100),
                          presets['buttonLineSize']
                          )
             pe.draw.line(ext['text'], (
-            (ss[0] - ss[0] / 6) - presets['buttonSpace'] - 30, (ss[1] / 2) + 140 - presets['buttonLineSize']),
+                (ss[0] - ss[0] / 6) - presets['buttonSpace'] - 30, (ss[1] / 2) + 140 - presets['buttonLineSize']),
                          ((ss[0] - ss[0] / 6) + presets['buttonSpace'] + 30,
                           (ss[1] / 2) + 140 - presets['buttonLineSize']), presets['buttonLineSize']
                          )

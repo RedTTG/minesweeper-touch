@@ -109,15 +109,15 @@ def make_assets(ext, measurements, rects, presets, resource_folder):
             os.path.join(resource_folder, 'flagged.png'),
             (20, 20)
         ), ext['background']),
-        'flagBackground': rawColoring(pe.Image(
+        'flag_background': rawColoring(pe.Image(
             os.path.join(resource_folder, 'flagged.png'),
             block_size
         ), ext['background']),
-        'mineBackground': rawColoring(pe.Image(
+        'mine_background': rawColoring(pe.Image(
             os.path.join(resource_folder, 'mine.png'),
             block_size
         ), ext['background']),
-        'flagText': rawColoring(pe.Image(
+        'flag_text': rawColoring(pe.Image(
             os.path.join(resource_folder, 'flagged.png'),
             block_size
         ), ext['text']),
@@ -125,19 +125,19 @@ def make_assets(ext, measurements, rects, presets, resource_folder):
             os.path.join(resource_folder, 'mine.png'),
             block_size
         ), ext['text']),
-        'flagColor': rawColoring(pe.Image(
+        'flag_color': rawColoring(pe.Image(
             os.path.join(resource_folder, 'flagged.png'),
             block_size
         ), ext['color']),
-        'mineColor': rawColoring(pe.Image(
+        'mine_color': rawColoring(pe.Image(
             os.path.join(resource_folder, 'mine.png'),
             block_size
         ), ext['color']),
-        'themesText': rawColoring(pe.Image(
+        'themes_text': rawColoring(pe.Image(
             os.path.join(resource_folder, 'themes.png'),
             block_size
         ), ext['text']),
-        'themesBackground': rawColoring(pe.Image(
+        'themes_ackground': rawColoring(pe.Image(
             os.path.join(resource_folder, 'themes.png'),
             block_size
         ), ext['background']),
