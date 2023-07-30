@@ -157,7 +157,7 @@ def make_assets(ext, measurements, rects, presets, resource_folder):
 
     text = {
         'beginGameText': pe.text.Text("Tap to begin.", font, 20, (measurements['x_center'], measurements['y_center']),
-                                      [ext['background'], None]),
+                                      [ext['background'], ext['color']]),
     }
     for selected in ['', '_selected']:
         for over in ['', '_over']:

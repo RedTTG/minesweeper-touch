@@ -785,12 +785,12 @@ while run:
             pregame_animation += 1
         else:
             pregame_animation = 255
-            game_state = 'startgame'
+            game_state = 'start_game'
         pe.draw.rect(ext['background'], (0, 0, ss[0], posy), 0)
         pe.draw.rect(ext['background'], (0, posy + rect[1] * scaley, ss[0], ss[1] - (posy + rect[1] * scaley)), 0)
         pe.draw.rect(ext['background'], (0, 0, posx, ss[1]), 0)
         pe.draw.rect(ext['background'], (posx + rect[0] * scalex, 0, ss[0] - (posx + rect[0] * scalex), ss[1]), 0)
-    elif game_state == 'startgame':
+    elif game_state == 'start_game':
         pe.draw.rect(ext['color'], (posx, posy, rect[0] * scalex, rect[1] * scaley), 0)
         res['beginGameText'].display()
         pe.draw.rect((*ext['color'], max(0, pregame_animation)), (posx, posy, rect[0] * scalex, rect[1] * scaley), 0)

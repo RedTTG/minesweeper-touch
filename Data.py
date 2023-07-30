@@ -2,6 +2,7 @@ import presets
 import pygameextra as pe
 import save_and_load
 import display_mesurements as dm
+from numpy import sin, cos
 from game_manager import GameManager
 
 

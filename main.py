@@ -8,7 +8,6 @@ from menu import MenuManager, touch_button
 # Changeable constants
 DEBUG = False
 
-
 data = Data()
 menu_manager = MenuManager(data)
 pe.settings.debugger = FreeMode()
@@ -21,8 +20,10 @@ def events(event):
     pe.event.quitCheckAuto()
     pe.mouse.fingersupport.handle_finger_events(False)
     if DEBUG:
-        if pe.event.key_DOWN(pe.pygame.K_ESCAPE):
+        if pe.event.key_DOWN(pe.pygame.K_RETURN):
             do_debug = True
+    if pe.event.key_DOWN(pe.pygame.K_ESCAPE):
+        data.state = 'menu'
 
 
 while True:
@@ -34,14 +35,21 @@ while True:
         pe.start_recording()
 
     pe.fill.full(data.ext['background'])
+
     if data.state == 'menu':
+        # Main menu
         menu_manager.main()
     elif data.state == 'pregame':
+        # Bubble animation
         data.game_manager.render_animation()
-    elif data.state == 'startgame':
+    elif data.state == 'start_game':
+        # Start game text
         data.game_manager.render_animation(True)
         if pe.mouse.clicked()[0]:
+            # Generate board and zoom in to game
             data.game_manager.begin_game()
+    elif data.state == 'in_game':
+        data.game_manager.render_game()
 
     if DEBUG:
         data.render_data()

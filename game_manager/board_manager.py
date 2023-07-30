@@ -132,3 +132,8 @@ class BoardManager():
             else:
                 self.current_board_map[current[1]][current[0]] = str(surround)
         return uncovered
+
+    def get_chunk(self, x, y, pnz):
+        if 0 < y < len(self.current_board) and 0 < x < len(self.current_board[0]):
+            return self.current_board[int(y)][int(x)], x, y
+        return None
