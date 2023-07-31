@@ -1,18 +1,24 @@
 import math
+import heapq
 
 
-def render_spiral(start_x, start_y, end_x, end_y, max_chunks_to_render):
-    mid_x = (start_x + end_x) // 2
-    mid_y = (start_y + end_y) // 2
+def render_spiral(start_x, start_y, end_x, end_y, max_chunks_to_render, reversed=False, min_distance=0):
+    mid_x = (start_x + end_x) / 2
+    mid_y = (start_y + end_y) / 2
 
-    points = []
+    def distance_from_center(x, y):
+        return math.sqrt((x - mid_x) ** 2 + (y - mid_y) ** 2)
+
+    points_heap = []
     for y in range(start_y, end_y):
         for x in range(start_x, end_x):
-            distance = math.sqrt((x - mid_x) ** 2 + (y - mid_y) ** 2)
-            points.append((x, y, distance))
+            distance = distance_from_center(x, y)
+            if reversed and distance < -min_distance:
+                continue
+            if len(points_heap) < max_chunks_to_render:
+                heapq.heappush(points_heap, (-distance, x, y))
+            else:
+                heapq.heappushpop(points_heap, (-distance, x, y))
 
-    points.sort(key=lambda p: p[2])  # Sort points by distance from center
-
-    for i in range(min(max_chunks_to_render, len(points))):
-        x, y, _ = points[i]
-        yield x, y
+    for distance, x, y in sorted(points_heap):
+        yield x, y, distance
