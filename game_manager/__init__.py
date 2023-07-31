@@ -150,15 +150,9 @@ class GameManager:
             end_chunk_x = min(grid_size[0], start_chunk_x + int(visible_rect.width / block_size[0]) + 1)
             end_chunk_y = min(grid_size[1], start_chunk_y + int(visible_rect.height / block_size[1]) + 1)
 
-            # min_distance = 0
-            for x, y, distance in render_spiral(start_chunk_x, start_chunk_y, end_chunk_x, end_chunk_y, 500):
+            
+            for x, y in render_spiral(start_chunk_x, start_chunk_y, end_chunk_x, end_chunk_y, 500):
                 self.render_chunk(x, y, block_size, grid_size)
-            #     min_distance = min(min_distance, distance)
-            # for x, y, distance in render_spiral(start_chunk_x, start_chunk_y, end_chunk_x, end_chunk_y, 500, True,
-            #                                     min_distance):
-            #     self.render_color(x, y, block_size, grid_size)
-
-            # exit()
 
     def calculate_lines(self, rect, right_side=False, bottom_side=False, scale=.4):
         sides = [(rect.midtop, (1, 0)), (rect.midleft, (0, 1))]
