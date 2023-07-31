@@ -1,3 +1,4 @@
+import math
 import random
 
 import pygameextra as pe
@@ -65,6 +66,22 @@ class GameManager:
                 )]
         )
 
+    def surround_rect(self, rect, color, area):
+        top_rect = pe.rect.Rect(area.left, area.top, area.width,
+                                rect.top - area.top)
+        bottom_rect = pe.rect.Rect(area.left, rect.bottom, area.width,
+                                   area.bottom - rect.bottom)
+        left_rect = pe.rect.Rect(area.left, rect.top, rect.left - area.left,
+                                 rect.height)
+        right_rect = pe.rect.Rect(rect.right, rect.top,
+                                  area.right - rect.right,
+                                  rect.height)
+
+        pe.draw.rect(color, top_rect, 0)
+        pe.draw.rect(color, bottom_rect, 0)
+        pe.draw.rect(color, left_rect, 0)
+        pe.draw.rect(color, right_rect, 0)
+
     def render_animation(self, static=False):
         if static:
             progress = 1.5
@@ -82,20 +99,7 @@ class GameManager:
             self.pregame_animation_time = time.time()
         screen_rect = self.data.measurements['screen_rect']
 
-        top_rect = pe.rect.Rect(screen_rect.left, screen_rect.top, screen_rect.width,
-                                self.rect.top - screen_rect.top)
-        bottom_rect = pe.rect.Rect(screen_rect.left, self.rect.bottom, screen_rect.width,
-                                   screen_rect.bottom - self.rect.bottom)
-        left_rect = pe.rect.Rect(screen_rect.left, self.rect.top, self.rect.left - screen_rect.left,
-                                 self.rect.height)
-        right_rect = pe.rect.Rect(self.rect.right, self.rect.top,
-                                  screen_rect.right - self.rect.right,
-                                  self.rect.height)
-
-        pe.draw.rect(self.data.ext['background'], top_rect, 0)
-        pe.draw.rect(self.data.ext['background'], bottom_rect, 0)
-        pe.draw.rect(self.data.ext['background'], left_rect, 0)
-        pe.draw.rect(self.data.ext['background'], right_rect, 0)
+        self.surround_rect(self.rect, self.data.ext['background'], screen_rect)
         if static:
             self.data.text['beginGameText'].display()
             progress = (time.time() - self.pregame_animation_time) / TIME_ANIMATION_TEXT
@@ -150,11 +154,25 @@ class GameManager:
             end_chunk_x = min(grid_size[0], start_chunk_x + int(visible_rect.width / block_size[0]) + 1)
             end_chunk_y = min(grid_size[1], start_chunk_y + int(visible_rect.height / block_size[1]) + 1)
 
-            for x, y, ok in render_spiral(start_chunk_x, start_chunk_y, end_chunk_x, end_chunk_y, 500):
-                if not ok:
-                    self.render_chunk(x, y, block_size, grid_size)
-                if ok:
-                    self.render_color(x, y, block_size, grid_size)
+            largest_x = -math.inf
+            largest_y = -math.inf
+            smallest_x = math.inf
+            smallest_y = math.inf
+            rendered_chunks = set()
+
+            for x, y in render_spiral(start_chunk_x, start_chunk_y, end_chunk_x, end_chunk_y, 500):
+                self.render_chunk(x, y, block_size, grid_size)
+                rendered_chunks.add((x, y))
+                largest_x = max(largest_x, x)
+                largest_y = max(largest_y, y)
+                smallest_x = min(smallest_x, x)
+                smallest_y = min(smallest_y, y)
+
+            for x in range(smallest_x, largest_x + 1):
+                for y in range(smallest_y, largest_y + 1):
+                    if (x, y) not in rendered_chunks:
+                        self.render_chunk(x, y, block_size, grid_size)
+            self.render_borders(smallest_x, smallest_y, largest_x, largest_y, block_size, grid_size)
 
     def calculate_lines(self, rect, right_side=False, bottom_side=False, scale=.4):
         sides = [(rect.midtop, (1, 0)), (rect.midleft, (0, 1))]
@@ -200,4 +218,14 @@ class GameManager:
     def render_color(self, chunk_x, chunk_y, block_size, grid_size):
         x, y = self.rect.left + chunk_x * block_size[0], self.rect.top + chunk_y * block_size[1]
         rect = pe.rect.Rect(x, y, *block_size)
-        pe.draw.rect(self.data.ext['color'], rect, 0)
+        pe.draw.rect(self.data.ext['color'], rect, 4)
+
+    def render_borders(self, smallest_x, smallest_y, largest_x, largest_y, block_size, grid_size):
+        rect = pe.rect.Rect(
+            self.rect.left + smallest_x * block_size[0],
+            self.rect.top + smallest_y * block_size[1],
+            (largest_x - smallest_x + 1) * block_size[0],
+            (largest_y - smallest_y + 1) * block_size[1]
+        )
+
+        self.surround_rect(rect, self.data.ext['color'], self.rect)
