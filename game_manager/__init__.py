@@ -150,9 +150,11 @@ class GameManager:
             end_chunk_x = min(grid_size[0], start_chunk_x + int(visible_rect.width / block_size[0]) + 1)
             end_chunk_y = min(grid_size[1], start_chunk_y + int(visible_rect.height / block_size[1]) + 1)
 
-            
-            for x, y in render_spiral(start_chunk_x, start_chunk_y, end_chunk_x, end_chunk_y, 500):
-                self.render_chunk(x, y, block_size, grid_size)
+            for x, y, ok in render_spiral(start_chunk_x, start_chunk_y, end_chunk_x, end_chunk_y, 500):
+                if not ok:
+                    self.render_chunk(x, y, block_size, grid_size)
+                if ok:
+                    self.render_color(x, y, block_size, grid_size)
 
     def calculate_lines(self, rect, right_side=False, bottom_side=False, scale=.4):
         sides = [(rect.midtop, (1, 0)), (rect.midleft, (0, 1))]
@@ -195,7 +197,7 @@ class GameManager:
         x, y = self.rect.left + chunk_x * block_size[0], self.rect.top + chunk_y * block_size[1]
         self.render_game_lines(x, y, *block_size, chunk_x, chunk_y, grid_size)
 
-    # def render_color(self, chunk_x, chunk_y, block_size, grid_size):
-    #     x, y = self.rect.left + chunk_x * block_size[0], self.rect.top + chunk_y * block_size[1]
-    #     rect = pe.rect.Rect(x, y, *block_size)
-    #     pe.draw.rect(self.data.ext['color'], rect, 0)
+    def render_color(self, chunk_x, chunk_y, block_size, grid_size):
+        x, y = self.rect.left + chunk_x * block_size[0], self.rect.top + chunk_y * block_size[1]
+        rect = pe.rect.Rect(x, y, *block_size)
+        pe.draw.rect(self.data.ext['color'], rect, 0)

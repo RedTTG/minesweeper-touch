@@ -1,5 +1,4 @@
 import math
-import heapq
 
 
 def render_spiral(start_x, start_y, end_x, end_y, max_chunks_to_render):
@@ -15,8 +14,8 @@ def render_spiral(start_x, start_y, end_x, end_y, max_chunks_to_render):
     max_chunks_to_render = int(math.ceil(math.sqrt(max_chunks_to_render))) ** 2
 
     for _ in range(max_chunks_to_render):
-        if start_x <= x < end_x and start_y <= y < end_y:
-            yield x, y
+        # if start_x <= x < end_x and start_y <= y < end_y:
+        yield x, y, False
 
         if step_count == distance:
             step_count = 0
@@ -35,3 +34,20 @@ def render_spiral(start_x, start_y, end_x, end_y, max_chunks_to_render):
             y -= 1
 
         step_count += 1
+
+        if x < start_x or x >= end_x:  # and start_y > y >= end_y:
+            direction = [
+                1,
+                2,
+                -1,
+                0,
+            ][direction]
+
+        if x < start_x:
+            x += 1
+            y -= distance + 2
+
+        if x >= end_x:
+            x -= 1
+            y += distance + 1
+
