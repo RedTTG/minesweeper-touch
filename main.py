@@ -5,10 +5,11 @@ import pygameextra as pe
 from Data import Data
 from menu import MenuManager, touch_button
 
-# Changeable constants
-DEBUG = False
-
 data = Data()
+# Changeable constants
+data.DEBUG = True
+
+# Init
 menu_manager = MenuManager(data)
 pe.settings.debugger = FreeMode()
 dm.make_display()
@@ -19,7 +20,7 @@ def events(event):
     global do_debug
     pe.event.quitCheckAuto()
     pe.mouse.fingersupport.handle_finger_events(False)
-    if DEBUG:
+    if data.DEBUG:
         if pe.event.key_DOWN(pe.pygame.K_RETURN):
             do_debug = True
     if pe.event.key_DOWN(pe.pygame.K_ESCAPE):
@@ -29,7 +30,7 @@ def events(event):
 while True:
     [events(event) for event in pe.event.get()]
 
-    if DEBUG:
+    if data.DEBUG:
         if pe.settings.recording:
             pe.stop_recording()
         pe.start_recording()
@@ -51,7 +52,7 @@ while True:
     elif data.state == 'in_game':
         data.game_manager.render_game()
 
-    if DEBUG:
+    if data.DEBUG:
         data.render_data()
 
     pe.display.update()
@@ -59,7 +60,7 @@ while True:
     if len(pe.mouse.fingersupport.fingers) == 0:
         touch_button.buttons.clear()
 
-    if DEBUG and do_debug:
+    if data.DEBUG and do_debug:
         pe.stop_recording()
         pe.start_debug()
         do_debug = False

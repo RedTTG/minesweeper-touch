@@ -20,6 +20,7 @@ class Data:
         self.ext = save_and_load.ext
         self.state = presets.game_state
         self.game_manager = GameManager(self)
+        self.DEBUG = False
 
         self.retheme()
 
